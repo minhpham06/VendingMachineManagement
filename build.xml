@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="UserManagement" default="default" basedir=".">
+    <description>Builds, tests, and runs the project UserManagement.</description>
+    <import file="nbproject/build-impl.xml"/>
+    <!-- NetBeans regenerates nbproject/build-impl.xml from nbproject/project.xml
+         the first time this project is opened, so that file is not shipped. -->
+</project>
