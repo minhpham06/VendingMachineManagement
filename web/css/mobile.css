@@ -1,0 +1,232 @@
+/* ==========================================================================
+   MOBILE & TABLET RESPONSIVE STYLESHEET (VendDB - PRJ301)
+   File riêng biệt hỗ trợ tối ưu giao diện khi truy cập trên thiết bị di động
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. TABLET & MÀN HÌNH NHỎ (Dưới 1024px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+    .container {
+        padding: 0 1rem;
+        margin: 1.25rem auto;
+    }
+
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.85rem;
+    }
+
+    .chart-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   2. SMARTPHONE & ĐIỆN THOẠI DI ĐỘNG (Dưới 768px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+
+    /* --- THANH ĐIỀU HƯỚNG NAVBAR TRÊN ĐIỆN THOẠI --- */
+    .navbar {
+        height: auto !important;
+        min-height: 52px;
+        padding: 0.5rem 0.75rem !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0 !important;
+    }
+
+    .nav-header {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .nav-brand {
+        text-align: left;
+        padding: 0.25rem 0;
+        font-size: 1.1rem;
+    }
+
+    .nav-toggle {
+        display: block !important;
+    }
+
+    .nav-collapse {
+        display: none !important;
+        flex-direction: column !important;
+        margin-left: 0 !important;
+        gap: 0.5rem !important;
+        padding-top: 0.5rem;
+        border-top: 1px solid var(--border-color);
+        margin-top: 0.5rem;
+    }
+
+    .nav-collapse.show {
+        display: flex !important;
+        animation: fadeInDown 0.2s ease-out;
+    }
+
+    .nav-menu {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        width: 100%;
+        gap: 0.15rem !important;
+    }
+
+    .nav-item {
+        font-size: 0.9rem !important;
+        padding: 0.5rem 0.6rem !important;
+        text-align: left;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Thanh thông tin user & Đăng xuất trên điện thoại */
+    .nav-right {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        width: 100%;
+        gap: 0.5rem !important;
+        padding-top: 0.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .nav-profile {
+        justify-content: space-between;
+        padding: 0.5rem 0.6rem !important;
+    }
+
+    .user-fullname {
+        max-width: none;
+    }
+    
+    .btn-logout {
+        text-align: center;
+        padding: 0.5rem !important;
+    }
+
+    /* --- BỐ CỤC NỘI DUNG (CONTAINER & CARDS) --- */
+    .container {
+        padding: 0 0.75rem !important;
+        margin: 0.75rem auto !important;
+        width: 100% !important;
+    }
+
+    .card {
+        padding: 1rem !important;
+        border-radius: 8px !important;
+    }
+
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.5rem;
+    }
+
+    .card-title {
+        font-size: 1.15rem !important;
+    }
+
+    /* --- KPI CARDS TRÊN ĐIỆN THOẠI --- */
+    .kpi-grid {
+        grid-template-columns: 1fr !important; /* 1 cột duy nhất */
+        gap: 0.75rem !important;
+    }
+
+    .kpi-card {
+        padding: 1rem !important;
+    }
+
+    .kpi-value {
+        font-size: 1.6rem !important;
+    }
+
+    /* --- BẢNG DỮ LIỆU (TABLES) CUỘN NGANG --- */
+    .table-container, .table-responsive {
+        width: 100%;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        margin-bottom: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 6px;
+    }
+
+    table {
+        min-width: 600px; /* Đảm bảo cột không bị co bóp mất chữ */
+        font-size: 0.82rem !important;
+    }
+
+    th, td {
+        padding: 0.5rem 0.6rem !important;
+        white-space: nowrap;
+    }
+
+    /* --- FORM & Ô NHẬP LIỆU --- */
+    .form-group {
+        margin-bottom: 0.85rem !important;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="number"],
+    input[type="email"],
+    input[type="datetime-local"],
+    select,
+    textarea {
+        font-size: 16px !important; /* Tránh tự động zoom in trên iOS */
+        padding: 0.6rem 0.75rem !important;
+        width: 100% !important;
+    }
+
+    /* --- NÚT BẤM (BUTTONS) TRÊN ĐIỆN THOẠI --- */
+    .btn {
+        padding: 0.55rem 1rem !important;
+        font-size: 0.88rem !important;
+        min-height: 42px; /* Dễ bấm cảm ứng */
+    }
+
+    .btn-group, div[style*="display:flex"][style*="justify-content:flex-end"] {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+        width: 100%;
+    }
+
+    .btn-group .btn, div[style*="display:flex"] > .btn {
+        width: 100% !important;
+        text-align: center;
+        justify-content: center;
+    }
+
+    /* --- BIỂU ĐỒ CANVAS --- */
+    canvas {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+
+    /* --- BỘ LỌC TÌM KIẾM (FILTERS) --- */
+    .filter-bar, form[style*="display:flex"] {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.5rem !important;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   3. MÀN HÌNH RẤT NHỎ (Dưới 480px - iPhone SE, Galaxy Mini...)
+   -------------------------------------------------------------------------- */
+@media (max-width: 480px) {
+    .nav-brand {
+        font-size: 1.05rem;
+    }
+
+    .role-tag {
+        font-size: 0.65rem;
+    }
+
+    .btn-logout {
+        padding: 0.2rem 0.45rem;
+        font-size: 0.75rem;
+    }
+}

@@ -7,6 +7,7 @@ import java.util.Date;
 public class WebUtil {
 
     private static final DecimalFormat CURRENCY_FMT = new DecimalFormat("#,##0");
+    private static final DecimalFormat WEIGHT_FMT = new DecimalFormat("#,##0.00");
     private static final SimpleDateFormat DATETIME_FMT = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 
     /** Escape chuoi de hien thi an toan tren HTML tranh loi XSS */
@@ -26,6 +27,10 @@ public class WebUtil {
             }
         }
         return out.toString();
+    }
+
+    public static String escapeHtml(Object val) {
+        return esc(val);
     }
 
     public static int parseInt(String val, int def) {
@@ -48,6 +53,10 @@ public class WebUtil {
 
     public static String formatCurrency(double amount) {
         return CURRENCY_FMT.format(amount) + " đ";
+    }
+
+    public static String formatWeight(double weight) {
+        return WEIGHT_FMT.format(weight) + " g";
     }
 
     public static String formatDateTime(Date d) {

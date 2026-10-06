@@ -2,61 +2,61 @@
 DỰ ÁN CUỐI MÔN PRJ301 - HỌC KỲ FALL 2026 - ĐỀ SỐ 01
 Đề tài: Máy bán hàng thu nhỏ tự phát hiện kẹt hàng bằng đối chiếu
         vòng quay lò xo và khối lượng khay
-(Miniature Vending Machine with Jam Detection by Cross-Checking Coil Rotation Against Tray Weight)
+(Miniature Vending Machine with Jam Detection by Cross-Checking
+ Coil Rotation Against Tray Weight)
 ================================================================
 
 1. MÔI TRƯỜNG CHUẨN THI
 ---------------------------------------------------------------
-- NetBeans 13 / IntelliJ IDEA / VS Code
+- NetBeans 13 / IntelliJ IDEA / Eclipse / VS Code
 - JDK 8 (1.8)
 - Apache Tomcat 9
-- Microsoft SQL Server 2012+ (Database: VendDB)
-- Thư viện JDBC duy nhất: sqljdbc4.jar (đã có sẵn trong web/WEB-INF/lib)
-- Mã nguồn viết theo mô hình chuẩn MVC2 thuần Servlet & JSP, không cần kết nối mạng.
+- Microsoft SQL Server 2012+ (CSDL: VendDB)
+- Thư viện JDBC duy nhất: sqljdbc4.jar (đã nằm sẵn trong web/WEB-INF/lib)
+- Kiến trúc: Chuẩn MVC2 thuần Servlet & JSP, không dùng thư viện ngoài
+- Đồ thị & Biểu đồ: Vẽ trực tiếp bằng HTML5 Canvas thuần (chạy Offline 100%)
 
-2. CÁC BƯỚC KHỞI ĐỘNG HỆ THỐNG
+2. CÁC BƯỚC KHỞI CHẠY HỆ THỐNG
 ---------------------------------------------------------------
-Bước 1: Chạy 2 file script SQL trong thư mục sql/ bằng SQL Server Management Studio hoặc sqlcmd:
-        1. sql/01_schema.sql      (Khởi tạo CSDL VendDB và toàn bộ các bảng)
-        2. sql/02_sample_data.sql (Nạp 5 vai trò, 5 tài khoản mẫu và 240 phiên dữ liệu mẫu)
+Bước 1. Mở SQL Server Management Studio (SSMS), chạy 2 script trong thư mục sql/:
+        - sql/01_schema.sql      (Khởi tạo CSDL VendDB và các bảng)
+        - sql/02_sample_data.sql (Nạp 5 vai trò, 5 user mẫu và 240 phiên thực nghiệm)
 
-Bước 2: Cấu hình kết nối tại: src/java/util/DBContext.java
-        - URL: jdbc:sqlserver://localhost:1433;databaseName=VendDB;encrypt=false
+Bước 2. Cấu hình chuỗi kết nối (nếu cần thay đổi sa/password):
+        - File: src/java/util/DBContext.java
+        - URL : jdbc:sqlserver://localhost:1433;databaseName=VendDB;encrypt=false
         - USER: sa
         - PASS: 123456
 
-Bước 3: Mở dự án trong NetBeans 13 (Open Project), chọn máy chủ Apache Tomcat 9.
+Bước 3. Mở NetBeans 13:
+        - File -> Open Project -> Trỏ vào thư mục UserManagement
+        - Chọn máy chủ Apache Tomcat 9 đã cài trên máy
 
-Bước 4: Nhấn Run (F6). Trình duyệt tự động mở trang đăng nhập tại:
-        http://localhost:8080/UserManagement/login
+Bước 4. Nhấn Run (F6):
+        - Trình duyệt tự động mở: http://localhost:8080/UserManagement/login
+        - Tại màn hình đăng nhập có 5 nút bấm nhanh để đăng nhập theo từng vai trò.
 
-3. DANH SÁCH TÀI KHOẢN MẪU KIỂM THỬ (MẬT KHẨU: 123456)
+3. DANH SÁCH TÀI KHOẢN MẪU & VAI TRÒ (MẬT KHẨU: 123456)
 ---------------------------------------------------------------
-Mọi mật khẩu đều được băm bảo mật bằng thuật toán PBKDF2WithHmacSHA256 (20,000 vòng băm, muối 16-byte ngẫu nhiên).
-Tại trang đăng nhập đã tích hợp sẵn 5 nút chọn nhanh (Quick-Login) để giảng viên/sinh viên kiểm thử ngay lập tức:
+Mọi mật khẩu đều được băm bảo mật bằng thuật toán PBKDF2WithHmacSHA256
+(20,000 vòng băm + muối 16-byte ngẫu nhiên).
 
-1. admin            - Vai trò: ADMIN (Toàn quyền quản trị tài khoản, vai trò, cấu hình hệ thống)
-2. catalog_manager  - Vai trò: CATALOG_MANAGER (Quản lý mặt hàng, khối lượng chuẩn, dung sai, rãnh chứa)
-3. operator         - Vai trò: OPERATOR (Vận hành, nạp hàng vào rãnh, lập phiếu nạp, chạy thử lượt nhả)
-4. reviewer         - Vai trò: REVIEWER (Kiểm duyệt các phiên bị nghi ngờ, sửa nhãn kèm lý do)
-5. viewer           - Vai trò: VIEWER (Chỉ xem tổng quan Dashboard, xem chi tiết phiên và xuất file CSV)
+1. admin           / 123456 -> ADMIN: Quản trị viên hệ thống (Toàn quyền CRUD)
+2. catalog_manager / 123456 -> CATALOG_MANAGER: Quản lý danh mục mặt hàng, dung sai, rãnh lò xo
+3. operator        / 123456 -> OPERATOR: Lập phiếu nạp hàng, mở/khóa rãnh bị kẹt, xử lý cảnh báo
+4. reviewer        / 123456 -> REVIEWER: Kiểm duyệt các phiên nghi ngờ, sửa nhãn kèm lý do (>= 5 ký tự)
+5. viewer          / 123456 -> VIEWER: Chỉ xem Dashboard, biểu đồ Canvas, danh sách phiên và xuất file CSV
 
-4. CƠ CHẾ BẢO MẬT & PHÂN QUYỀN PHÍA SERVER
+4. CÁC CHỨC NĂNG NỔI BẬT ĐÃ HOÀN THIỆN
 ---------------------------------------------------------------
-- Phân quyền chặt chẽ thông qua filter/AuthFilter.java:
-  + /admin/*   : Chỉ ADMIN được phép truy cập.
-  + /master/*  : ADMIN, CATALOG_MANAGER, OPERATOR.
-  + /label/*   : ADMIN, REVIEWER.
-  + /sessions  : Tất cả 5 vai trò.
-  + /dashboard : Tất cả 5 vai trò.
-- Nếu người dùng đăng nhập bằng vai trò không có quyền (ví dụ viewer) cố tình dán trực tiếp đường dẫn
-  vào trình duyệt (URL bypass), Server sẽ chặn ngay lập tức và chuyển tiếp về trang 403 Forbidden.
-- Ngăn chặn người dùng tự khóa hoặc tự xóa chính tài khoản đang đăng nhập của mình.
-
-5. DỮ LIỆU THỰC NGHIỆM BAN ĐẦU
----------------------------------------------------------------
-Cơ sở dữ liệu VendDB đã được nạp sẵn 240 phiên mẫu chuẩn (is_sample = 1) theo đúng quy định đề bài:
-- SUCCESS: 120 phiên (Trục quay đủ 1 vòng & khay tăng đúng dải khối lượng đăng ký)
-- JAM: 40 phiên (Trục quay đủ 1 vòng nhưng hàng kẹt trong rãnh, khay không tăng khối lượng)
-- WRONG_ITEM: 50 phiên (Khay tăng khối lượng nhưng rơi sai món hoặc rơi 2 món cùng lúc)
-- MOTOR_FAIL: 30 phiên (Trục kẹt không quay hết 1 vòng trong thời gian tối đa 4 giây)
+1. [Dashboard & Canvas Charts]: Biểu đồ Donut cơ cấu phân loại, Biểu đồ cột Bar Chart tỷ lệ kẹt theo mặt hàng, Bảng rủi ro.
+2. [Quản lý Danh mục (Product & Slot)]: Cấu hình khối lượng danh định, dung sai, đơn giá, tự khóa rãnh (SUSPENDED).
+3. [Lập phiếu Nạp hàng (Restock)]: Quản lý số lượng tồn, lưu vết người nạp và cập nhật tồn kho an toàn bằng Transaction.
+4. [Danh sách & Chi tiết Phiên (Session Detail)]:
+   - Phân trang server-side bằng OFFSET/FETCH NEXT.
+   - Vẽ đồ thị dạng sóng 3 pha của khối lượng khay trên thẻ HTML5 Canvas (W_trước -> W_đỉnh -> W_sau).
+   - Chức năng sửa nhãn cho Reviewer có lưu vết Audit Trail.
+5. [Động cơ Cảnh báo Thông minh (Smart Alert Engine)]: 4 luật tự động (Kẹt liên tiếp, Sắp hết hàng, Trôi dạt cảm biến, Mòn động cơ).
+6. [API ESP32 & Xuất CSV]:
+   - Endpoint: POST /api/ingest có kiểm tra X-API-Key, chống gói trùng.
+   - Xuất dữ liệu thực nghiệm ra file CSV chuẩn UTF-8 có BOM.

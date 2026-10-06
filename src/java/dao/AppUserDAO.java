@@ -63,37 +63,43 @@ public class AppUserDAO {
     }
 
     /**
-     * Kiem tra dang nhap.
-     * Tra ve AppUser neu thanh cong.
-     * Neu sai mat khau hoac khong tim thay: tra ve null.
+     * Kiem tra dang nhap: xac thuc PBKDF2.
      */
-    public AppUser authenticate(String username, String plainPassword) {
+    public AppUser authenticate(String username, String rawPassword) {
         AppUser user = findByUsername(username);
         if (user == null) {
             return null;
         }
-        if (PasswordUtil.verify(plainPassword, user.getPassHash())) {
+        if (PasswordUtil.verify(rawPassword, user.getPassHash())) {
             return user;
         }
         return null;
     }
 
-    public List<AppUser> searchUsers(String query, Integer roleId, Boolean locked, int page, int pageSize) {
+    public List<AppUser> search(String q, Integer roleId, Boolean locked, int offset, int limit) {
         List<AppUser> list = new ArrayList<AppUser>();
-        StringBuilder sql = new StringBuilder(SELECT_BASE).append("WHERE 1 = 1 ");
+        StringBuilder sql = new StringBuilder(SELECT_BASE).append("WHERE 1=1 ");
+        List<Object> params = new ArrayList<Object>();
 
-        if (query != null && !query.trim().isEmpty()) {
+        if (q != null && !q.trim().isEmpty()) {
             sql.append("AND (u.username LIKE ? OR u.full_name LIKE ? OR u.email LIKE ?) ");
+            String pattern = "%" + q.trim() + "%";
+            params.add(pattern);
+            params.add(pattern);
+            params.add(pattern);
         }
         if (roleId != null && roleId > 0) {
             sql.append("AND u.role_id = ? ");
+            params.add(roleId);
         }
         if (locked != null) {
             sql.append("AND u.is_locked = ? ");
+            params.add(locked ? 1 : 0);
         }
 
-        sql.append("ORDER BY u.user_id ASC ");
-        sql.append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+        sql.append("ORDER BY u.user_id DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+        params.add(offset);
+        params.add(limit);
 
         Connection conn = null;
         PreparedStatement ps = null;
@@ -101,22 +107,9 @@ public class AppUserDAO {
         try {
             conn = DBContext.getConnection();
             ps = conn.prepareStatement(sql.toString());
-            int idx = 1;
-            if (query != null && !query.trim().isEmpty()) {
-                String pattern = "%" + query.trim() + "%";
-                ps.setString(idx++, pattern);
-                ps.setString(idx++, pattern);
-                ps.setString(idx++, pattern);
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
             }
-            if (roleId != null && roleId > 0) {
-                ps.setInt(idx++, roleId);
-            }
-            if (locked != null) {
-                ps.setBoolean(idx++, locked);
-            }
-            ps.setInt(idx++, (Math.max(1, page) - 1) * pageSize);
-            ps.setInt(idx++, pageSize);
-
             rs = ps.executeQuery();
             while (rs.next()) {
                 list.add(mapUser(rs));
@@ -129,17 +122,24 @@ public class AppUserDAO {
         return list;
     }
 
-    public int countUsers(String query, Integer roleId, Boolean locked) {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM AppUser u WHERE 1 = 1 ");
+    public int count(String q, Integer roleId, Boolean locked) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM AppUser u WHERE 1=1 ");
+        List<Object> params = new ArrayList<Object>();
 
-        if (query != null && !query.trim().isEmpty()) {
+        if (q != null && !q.trim().isEmpty()) {
             sql.append("AND (u.username LIKE ? OR u.full_name LIKE ? OR u.email LIKE ?) ");
+            String pattern = "%" + q.trim() + "%";
+            params.add(pattern);
+            params.add(pattern);
+            params.add(pattern);
         }
         if (roleId != null && roleId > 0) {
             sql.append("AND u.role_id = ? ");
+            params.add(roleId);
         }
         if (locked != null) {
             sql.append("AND u.is_locked = ? ");
+            params.add(locked ? 1 : 0);
         }
 
         Connection conn = null;
@@ -148,20 +148,9 @@ public class AppUserDAO {
         try {
             conn = DBContext.getConnection();
             ps = conn.prepareStatement(sql.toString());
-            int idx = 1;
-            if (query != null && !query.trim().isEmpty()) {
-                String pattern = "%" + query.trim() + "%";
-                ps.setString(idx++, pattern);
-                ps.setString(idx++, pattern);
-                ps.setString(idx++, pattern);
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
             }
-            if (roleId != null && roleId > 0) {
-                ps.setInt(idx++, roleId);
-            }
-            if (locked != null) {
-                ps.setBoolean(idx++, locked);
-            }
-
             rs = ps.executeQuery();
             if (rs.next()) {
                 return rs.getInt(1);
@@ -174,33 +163,8 @@ public class AppUserDAO {
         return 0;
     }
 
-    public boolean isUsernameExists(String username, Integer excludeUserId) {
-        String sql = "SELECT user_id FROM AppUser WHERE username = ?";
-        if (excludeUserId != null) {
-            sql += " AND user_id <> ?";
-        }
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        try {
-            conn = DBContext.getConnection();
-            ps = conn.prepareStatement(sql);
-            ps.setString(1, username.trim());
-            if (excludeUserId != null) {
-                ps.setInt(2, excludeUserId);
-            }
-            rs = ps.executeQuery();
-            return rs.next();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        } finally {
-            DBContext.close(rs, ps, conn);
-        }
-        return false;
-    }
-
-    public int insert(AppUser u, String plainPassword) {
-        String sql = "INSERT INTO AppUser(username, pass_hash, full_name, email, phone, role_id, is_locked) " +
+    public int insert(AppUser u) {
+        String sql = "INSERT INTO AppUser (username, pass_hash, full_name, email, phone, role_id, is_locked) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?)";
         Connection conn = null;
         PreparedStatement ps = null;
@@ -208,11 +172,11 @@ public class AppUserDAO {
         try {
             conn = DBContext.getConnection();
             ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setString(1, u.getUsername().trim());
-            ps.setString(2, PasswordUtil.hash(plainPassword));
-            ps.setString(3, u.getFullName().trim());
-            ps.setString(4, u.getEmail() != null ? u.getEmail().trim() : null);
-            ps.setString(5, u.getPhone() != null ? u.getPhone().trim() : null);
+            ps.setString(1, u.getUsername());
+            ps.setString(2, u.getPassHash());
+            ps.setString(3, u.getFullName());
+            ps.setString(4, u.getEmail());
+            ps.setString(5, u.getPhone());
             ps.setInt(6, u.getRoleId());
             ps.setBoolean(7, u.isLocked());
             ps.executeUpdate();
@@ -225,31 +189,50 @@ public class AppUserDAO {
         } finally {
             DBContext.close(rs, ps, conn);
         }
-        return -1;
+        return 0;
     }
 
     public boolean update(AppUser u) {
-        String sql = "UPDATE AppUser SET full_name = ?, email = ?, phone = ?, role_id = ? WHERE user_id = ?";
+        String sql = "UPDATE AppUser SET full_name = ?, email = ?, phone = ?, role_id = ?, is_locked = ? WHERE user_id = ?";
         Connection conn = null;
         PreparedStatement ps = null;
         try {
             conn = DBContext.getConnection();
             ps = conn.prepareStatement(sql);
-            ps.setString(1, u.getFullName().trim());
-            ps.setString(2, u.getEmail() != null ? u.getEmail().trim() : null);
-            ps.setString(3, u.getPhone() != null ? u.getPhone().trim() : null);
+            ps.setString(1, u.getFullName());
+            ps.setString(2, u.getEmail());
+            ps.setString(3, u.getPhone());
             ps.setInt(4, u.getRoleId());
-            ps.setInt(5, u.getUserId());
+            ps.setBoolean(5, u.isLocked());
+            ps.setInt(6, u.getUserId());
             return ps.executeUpdate() > 0;
         } catch (SQLException ex) {
             ex.printStackTrace();
+            return false;
         } finally {
-            DBContext.close(ps, conn);
+            DBContext.close(null, ps, conn);
         }
-        return false;
     }
 
-    public boolean toggleLock(int userId, boolean locked) {
+    public boolean updatePassword(int userId, String newPassHash) {
+        String sql = "UPDATE AppUser SET pass_hash = ? WHERE user_id = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = DBContext.getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, newPassHash);
+            ps.setInt(2, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        } finally {
+            DBContext.close(null, ps, conn);
+        }
+    }
+
+    public boolean setLock(int userId, boolean locked) {
         String sql = "UPDATE AppUser SET is_locked = ? WHERE user_id = ?";
         Connection conn = null;
         PreparedStatement ps = null;
@@ -261,37 +244,10 @@ public class AppUserDAO {
             return ps.executeUpdate() > 0;
         } catch (SQLException ex) {
             ex.printStackTrace();
-        } finally {
-            DBContext.close(ps, conn);
-        }
-        return false;
-    }
-
-    public boolean resetPassword(int userId, String defaultPlainPassword) {
-        String sql = "UPDATE AppUser SET pass_hash = ? WHERE user_id = ?";
-        Connection conn = null;
-        PreparedStatement ps = null;
-        try {
-            conn = DBContext.getConnection();
-            ps = conn.prepareStatement(sql);
-            ps.setString(1, PasswordUtil.hash(defaultPlainPassword));
-            ps.setInt(2, userId);
-            return ps.executeUpdate() > 0;
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        } finally {
-            DBContext.close(ps, conn);
-        }
-        return false;
-    }
-
-    public boolean changePassword(int userId, String oldPlainPassword, String newPlainPassword) {
-        AppUser u = findById(userId);
-        if (u == null) return false;
-        if (!PasswordUtil.verify(oldPlainPassword, u.getPassHash())) {
             return false;
+        } finally {
+            DBContext.close(null, ps, conn);
         }
-        return resetPassword(userId, newPlainPassword);
     }
 
     public boolean delete(int userId) {
@@ -305,10 +261,10 @@ public class AppUserDAO {
             return ps.executeUpdate() > 0;
         } catch (SQLException ex) {
             ex.printStackTrace();
+            return false;
         } finally {
-            DBContext.close(ps, conn);
+            DBContext.close(null, ps, conn);
         }
-        return false;
     }
 
     private AppUser mapUser(ResultSet rs) throws SQLException {

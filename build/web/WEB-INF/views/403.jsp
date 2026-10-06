@@ -1,58 +1,25 @@
-<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="java.util.Set" %>
-<%@ page import="model.AppUser" %>
-<%@ page import="util.WebUtil" %>
-<%
-    AppUser user = (AppUser) session.getAttribute("user");
-    String forbiddenPath = (String) request.getAttribute("forbiddenPath");
-    String currentRole = (String) request.getAttribute("currentRole");
-    Set<String> allowedRoles = (Set<String>) request.getAttribute("allowedRoles");
-%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>403 - Quyền truy cập bị từ chối | VendGuard PRJ301</title>
-    <link rel="stylesheet" href="<%= request.getContextPath() %>/css/app.css">
+    <meta charset="UTF-8">
+    <title>403 - Không có quyền truy cập</title>
+    <link rel="stylesheet" href="<%=request.getContextPath()%>/css/style.css">
 </head>
 <body>
-    <jsp:include page="/WEB-INF/views/nav.jsp"/>
-
-    <main class="main-wrapper">
-        <div class="card error-page">
-            <div class="error-code">403</div>
-            <h1 class="error-title">Truy cập bị từ chối (Access Denied)</h1>
-            <p class="error-desc">
-                Bạn không có quyền truy cập vào đường dẫn: 
-                <b style="color: var(--danger);"><%= WebUtil.esc(forbiddenPath) %></b>
+    <div style="display:flex; justify-content:center; align-items:center; min-height:100vh; padding:1.5rem;">
+        <div class="card" style="max-width:480px; text-align:center; padding:2.5rem;">
+            <div style="font-size:3.5rem; margin-bottom:1rem;">🚫</div>
+            <h1 style="font-size:1.6rem; color:#f87171; margin-bottom:0.5rem;">403 - Quyền Truy Cập Bị Từ Chối</h1>
+            <p style="color:var(--text-secondary); font-size:0.92rem; margin-bottom:1.5rem;">
+                Tài khoản của bạn (<strong style="color:#93c5fd;"><%=request.getAttribute("userRole")%></strong>) không có quyền truy cập vào đường dẫn:
+                <br><code style="background:rgba(0,0,0,0.3); padding:0.2rem 0.5rem; border-radius:4px; color:#fca5a5;"><%=request.getAttribute("requestedPath")%></code>
             </p>
-
-            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 18px; max-width: 480px; margin: 0 auto 24px; text-align: left; font-size: 13.5px;">
-                <div style="margin-bottom: 8px;">
-                    <b>Vai trò hiện tại của bạn:</b> 
-                    <span class="badge badge-viewer"><%= currentRole != null ? currentRole : "CHƯA XÁC ĐỊNH" %></span>
-                </div>
-                <div>
-                    <b>Các vai trò được phép truy cập:</b>
-                    <% if (allowedRoles != null) {
-                        for (String r : allowedRoles) { %>
-                            <span class="badge badge-admin"><%= r %></span>
-                    <%  }
-                    } %>
-                </div>
-            </div>
-
-            <div>
-                <a href="<%= request.getContextPath() %>/dashboard" class="btn btn-primary">
-                    ← Quay lại Bảng điều khiển
-                </a>
-            </div>
+            <a href="<%=request.getContextPath()%>/dashboard" class="btn btn-primary">
+                🏠 Quay về Trang chủ
+            </a>
         </div>
-    </main>
-
-    <footer class="footer">
-        Đồ án PRJ301 - Đề số 01: Máy bán hàng thu nhỏ tự phát hiện kẹt hàng &copy; Fall 2026. Trường Đại học FPT.
-    </footer>
+    </div>
 </body>
 </html>

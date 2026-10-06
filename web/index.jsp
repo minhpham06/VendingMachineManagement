@@ -1,4 +1,5 @@
-<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" %>
-<%-- The filter sends an anonymous visitor to the login page and a signed in
-     one to the dashboard, so this file only needs to hand over control. --%>
-<% response.sendRedirect(request.getContextPath() + "/dashboard"); %>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%
+    // Tu dong chuyen huong vao dashboard neu da dang nhap, hoac vao trang login
+    response.sendRedirect(request.getContextPath() + "/dashboard");
+%>

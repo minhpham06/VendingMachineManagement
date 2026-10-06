@@ -19,7 +19,6 @@ public class LoginServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        // Neu da dang nhap roi thi chuyen huong ve dashboard
         HttpSession session = req.getSession(false);
         if (session != null && session.getAttribute("user") != null) {
             resp.sendRedirect(req.getContextPath() + "/dashboard");
@@ -28,6 +27,9 @@ public class LoginServlet extends HttpServlet {
 
         if (req.getParameter("logout") != null) {
             req.setAttribute("successMessage", "Bạn đã đăng xuất thành công khỏi hệ thống.");
+        }
+        if (req.getParameter("locked") != null) {
+            req.setAttribute("errorMessage", "Tài khoản của bạn hiện đang bị khóa. Vui lòng liên hệ Quản trị viên.");
         }
 
         req.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(req, resp);
@@ -51,12 +53,11 @@ public class LoginServlet extends HttpServlet {
         AppUser user = userDAO.authenticate(username, password);
 
         if (user == null) {
-            // Kiem tra xem co phai ton tai user nhung sai pass hoac bi khoa khong
             AppUser existing = userDAO.findByUsername(username);
             if (existing != null && existing.isLocked()) {
-                req.setAttribute("errorMessage", "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Quản trị viên.");
+                req.setAttribute("errorMessage", "Tài khoản đang bị khóa.");
             } else {
-                req.setAttribute("errorMessage", "Tên đăng nhập hoặc mật khẩu không chính xác.");
+                req.setAttribute("errorMessage", "Sai tên đăng nhập hoặc mật khẩu.");
             }
             req.setAttribute("username", username);
             req.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(req, resp);
@@ -64,24 +65,20 @@ public class LoginServlet extends HttpServlet {
         }
 
         if (user.isLocked()) {
-            req.setAttribute("errorMessage", "Tài khoản của bạn hiện đang bị khóa.");
+            req.setAttribute("errorMessage", "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Quản trị viên.");
             req.setAttribute("username", username);
             req.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(req, resp);
             return;
         }
 
-        // Dang nhap thanh cong, tao phien lam viec moi
-        HttpSession oldSession = req.getSession(false);
-        if (oldSession != null) {
-            oldSession.invalidate();
-        }
-        HttpSession newSession = req.getSession(true);
-        newSession.setAttribute("user", user);
+        // Đăng nhập thành công -> Lưu session
+        HttpSession session = req.getSession(true);
+        session.setAttribute("user", user);
 
-        String redirectUrl = (String) newSession.getAttribute("redirectAfterLogin");
-        if (redirectUrl != null && !redirectUrl.isEmpty()) {
-            newSession.removeAttribute("redirectAfterLogin");
-            resp.sendRedirect(req.getContextPath() + redirectUrl);
+        String target = (String) session.getAttribute("targetUrl");
+        if (target != null && !target.isEmpty()) {
+            session.removeAttribute("targetUrl");
+            resp.sendRedirect(target);
         } else {
             resp.sendRedirect(req.getContextPath() + "/dashboard");
         }

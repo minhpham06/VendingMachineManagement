@@ -19,8 +19,8 @@ import javax.servlet.http.HttpSession;
 import model.AppUser;
 
 /**
- * Bo loc xac thuc va phan quyen 5 vai tro cua he thong.
- * Chan tat ca request tai server truoc khi vao Controller.
+ * Bộ lọc xác thực và phân quyền 5 vai trò phía server.
+ * Chặn bypass URL và cấu hình UTF-8 toàn hệ thống.
  */
 @WebFilter("/*")
 public class AuthFilter implements Filter {
@@ -28,25 +28,35 @@ public class AuthFilter implements Filter {
     private static final Map<String, Set<String>> ALLOWED = new LinkedHashMap<String, Set<String>>();
 
     static {
-        // 1. Phan he quan tri nguoi dung & thiet bi: Chi ADMIN
+        // 1. Quản trị hệ thống (Người dùng & Thiết bị): Chỉ ADMIN
         ALLOWED.put("/admin", roles("ADMIN"));
 
-        // 2. Phan he quan ly danh muc mat hang, ranh hang, phieu nap: ADMIN, CATALOG_MANAGER, OPERATOR
-        ALLOWED.put("/master", roles("ADMIN", "CATALOG_MANAGER", "OPERATOR"));
+        // 2. Quản lý Mặt hàng: ADMIN, CATALOG_MANAGER
+        ALLOWED.put("/master/product", roles("ADMIN", "CATALOG_MANAGER"));
 
-        // 3. Chuc nang sua nhan: ADMIN, REVIEWER
+        // 3. Quản lý Rãnh lò xo: ADMIN, CATALOG_MANAGER, OPERATOR
+        ALLOWED.put("/master/slot", roles("ADMIN", "CATALOG_MANAGER", "OPERATOR"));
+
+        // 4. Phiếu nạp hàng: ADMIN, OPERATOR
+        ALLOWED.put("/master/restock", roles("ADMIN", "OPERATOR"));
+
+        // 5. Kiểm duyệt & Sửa nhãn: ADMIN, REVIEWER
         ALLOWED.put("/label", roles("ADMIN", "REVIEWER"));
 
-        // 4. Xem danh sach phien, chi tiet phien, xuat CSV, dashboard, profile: Tat ca 5 vai tro
-        ALLOWED.put("/sessions", roles("ADMIN", "CATALOG_MANAGER", "OPERATOR", "REVIEWER", "VIEWER"));
-        ALLOWED.put("/session",  roles("ADMIN", "CATALOG_MANAGER", "OPERATOR", "REVIEWER", "VIEWER"));
+        // 6. Xử lý cảnh báo: ADMIN, OPERATOR
+        ALLOWED.put("/alert/resolve", roles("ADMIN", "OPERATOR"));
+
+        // 7. Xem danh sách phiên, chi tiết phiên, dashboard, alerts, profile, export CSV: Cả 5 vai trò
+        ALLOWED.put("/alerts",    roles("ADMIN", "CATALOG_MANAGER", "OPERATOR", "REVIEWER", "VIEWER"));
+        ALLOWED.put("/sessions",  roles("ADMIN", "CATALOG_MANAGER", "OPERATOR", "REVIEWER", "VIEWER"));
+        ALLOWED.put("/session",   roles("ADMIN", "CATALOG_MANAGER", "OPERATOR", "REVIEWER", "VIEWER"));
         ALLOWED.put("/dashboard", roles("ADMIN", "CATALOG_MANAGER", "OPERATOR", "REVIEWER", "VIEWER"));
         ALLOWED.put("/profile",   roles("ADMIN", "CATALOG_MANAGER", "OPERATOR", "REVIEWER", "VIEWER"));
         ALLOWED.put("/export",    roles("ADMIN", "CATALOG_MANAGER", "OPERATOR", "REVIEWER", "VIEWER"));
     }
 
-    private static Set<String> roles(String... names) {
-        return new HashSet<String>(Arrays.asList(names));
+    private static Set<String> roles(String... r) {
+        return new HashSet<String>(Arrays.asList(r));
     }
 
     @Override
@@ -60,62 +70,75 @@ public class AuthFilter implements Filter {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse resp = (HttpServletResponse) response;
 
-        // Dong bo UTF-8 cho toan bo request/response
+        // Thiết lập bảng mã UTF-8 cho cả request và response
         req.setCharacterEncoding("UTF-8");
         resp.setCharacterEncoding("UTF-8");
 
-        String uri = req.getRequestURI();
-        String contextPath = req.getContextPath();
-        String path = uri.substring(contextPath.length());
+        String path = req.getServletPath();
+        if (path == null || path.isEmpty()) {
+            path = "/";
+        }
 
-        // Bo qua cac duong dan cong khai: dang nhap, tai nguyen tinh, endpoint nhan du lieu tu ESP32
-        if (path.equals("/") || path.equals("/index.jsp")
-                || path.startsWith("/login")
-                || path.startsWith("/logout")
-                || path.startsWith("/api/")
-                || path.startsWith("/css/")
-                || path.startsWith("/js/")
-                || path.startsWith("/images/")
-                || path.startsWith("/assets/")) {
+        // 1. Cho phép tài nguyên tĩnh và API không cần session Web
+        if (path.startsWith("/css/") || path.startsWith("/js/") || path.startsWith("/images/")
+            || path.endsWith(".css") || path.endsWith(".js") || path.endsWith(".png") || path.endsWith(".jpg")
+            || path.endsWith(".ico") || "/api/ingest".equals(path)) {
             chain.doFilter(request, response);
             return;
         }
 
-        // Kiem tra phien dang nhap
+        // 2. Cho phép trang Login / Logout và trang chủ
+        if ("/login".equals(path) || "/logout".equals(path) || "/".equals(path) || "/index.jsp".equals(path)) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        // 3. Kiểm tra Session đăng nhập
         HttpSession session = req.getSession(false);
         AppUser user = (session != null) ? (AppUser) session.getAttribute("user") : null;
 
         if (user == null) {
-            // Luu lai URL can vao de sau khi login thanh cong thi redirect toi
-            session = req.getSession(true);
-            session.setAttribute("redirectAfterLogin", path);
-            resp.sendRedirect(contextPath + "/login");
+            // Chưa đăng nhập -> Lưu URL muốn vào và chuyển sang login
+            String target = req.getRequestURI();
+            String query = req.getQueryString();
+            if (query != null) {
+                target += "?" + query;
+            }
+            if (session == null) {
+                session = req.getSession(true);
+            }
+            session.setAttribute("targetUrl", target);
+            resp.sendRedirect(req.getContextPath() + "/login");
             return;
         }
 
-        // Kiem tra tai khoan co bi khoa dot xuat khong
+        // 4. Kiểm tra tài khoản bị khóa
         if (user.isLocked()) {
             session.invalidate();
-            req.setAttribute("errorMessage", "Tài khoản của bạn đã bị khóa bởi Quản trị viên.");
-            req.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(req, resp);
+            resp.sendRedirect(req.getContextPath() + "/login?locked=1");
             return;
         }
 
-        // Kiem tra ma tran quyen theo tien to duong dan (path prefix)
+        // 5. Kiểm tra phân quyền truy cập theo role_code
+        String userRole = user.getRoleCode();
+        boolean pathProtected = false;
+        boolean permitted = false;
+
         for (Map.Entry<String, Set<String>> entry : ALLOWED.entrySet()) {
-            String prefix = entry.getKey();
-            if (path.startsWith(prefix)) {
-                Set<String> allowedRoles = entry.getValue();
-                if (!allowedRoles.contains(user.getRoleCode())) {
-                    req.setAttribute("forbiddenPath", path);
-                    req.setAttribute("currentRole", user.getRoleCode());
-                    req.setAttribute("allowedRoles", allowedRoles);
-                    resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    req.getRequestDispatcher("/WEB-INF/views/403.jsp").forward(req, resp);
-                    return;
+            if (path.startsWith(entry.getKey())) {
+                pathProtected = true;
+                if (entry.getValue().contains(userRole)) {
+                    permitted = true;
+                    break;
                 }
-                break;
             }
+        }
+
+        if (pathProtected && !permitted) {
+            req.setAttribute("userRole", userRole);
+            req.setAttribute("requestedPath", path);
+            req.getRequestDispatcher("/WEB-INF/views/403.jsp").forward(req, resp);
+            return;
         }
 
         chain.doFilter(request, response);

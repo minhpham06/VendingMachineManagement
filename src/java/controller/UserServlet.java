@@ -12,6 +12,7 @@ import dao.AppRoleDAO;
 import dao.AppUserDAO;
 import model.AppRole;
 import model.AppUser;
+import util.PasswordUtil;
 import util.WebUtil;
 
 @WebServlet(urlPatterns = {
@@ -64,34 +65,39 @@ public class UserServlet extends HttpServlet {
     private void showList(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        String query = req.getParameter("q");
+        String q = req.getParameter("q");
+        Integer roleId = null;
         String roleStr = req.getParameter("roleId");
-        String lockedStr = req.getParameter("locked");
+        if (roleStr != null && !roleStr.isEmpty()) {
+            roleId = WebUtil.parseInt(roleStr, 0);
+            if (roleId == 0) roleId = null;
+        }
+
+        Boolean locked = null;
+        String lockStr = req.getParameter("locked");
+        if ("1".equals(lockStr)) locked = true;
+        else if ("0".equals(lockStr)) locked = false;
+
         int page = WebUtil.parseInt(req.getParameter("page"), 1);
         if (page < 1) page = 1;
 
-        Integer roleId = (roleStr != null && !roleStr.trim().isEmpty()) ? WebUtil.parseInt(roleStr, 0) : null;
-        if (roleId != null && roleId <= 0) roleId = null;
-
-        Boolean isLocked = null;
-        if ("1".equals(lockedStr)) isLocked = Boolean.TRUE;
-        else if ("0".equals(lockedStr)) isLocked = Boolean.FALSE;
-
-        List<AppUser> users = userDAO.searchUsers(query, roleId, isLocked, page, PAGE_SIZE);
-        int total = userDAO.countUsers(query, roleId, isLocked);
-        int totalPages = (total + PAGE_SIZE - 1) / PAGE_SIZE;
+        int totalUsers = userDAO.count(q, roleId, locked);
+        int totalPages = (int) Math.ceil((double) totalUsers / PAGE_SIZE);
         if (totalPages < 1) totalPages = 1;
+        if (page > totalPages) page = totalPages;
 
+        int offset = (page - 1) * PAGE_SIZE;
+        List<AppUser> users = userDAO.search(q, roleId, locked, offset, PAGE_SIZE);
         List<AppRole> roles = roleDAO.getAllRoles();
 
         req.setAttribute("users", users);
         req.setAttribute("roles", roles);
-        req.setAttribute("page", page);
+        req.setAttribute("totalUsers", totalUsers);
+        req.setAttribute("currentPage", page);
         req.setAttribute("totalPages", totalPages);
-        req.setAttribute("total", total);
-        req.setAttribute("query", query);
-        req.setAttribute("selectedRoleId", roleId);
-        req.setAttribute("selectedLocked", lockedStr);
+        req.setAttribute("q", q);
+        req.setAttribute("roleId", roleId);
+        req.setAttribute("locked", lockStr);
 
         req.getRequestDispatcher("/WEB-INF/views/users.jsp").forward(req, resp);
     }
@@ -99,83 +105,75 @@ public class UserServlet extends HttpServlet {
     private void showCreateForm(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         req.setAttribute("roles", roleDAO.getAllRoles());
-        req.setAttribute("isEdit", false);
-        req.getRequestDispatcher("/WEB-INF/views/user-form.jsp").forward(req, resp);
-    }
-
-    private void showEditForm(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-        int id = WebUtil.parseInt(req.getParameter("id"), 0);
-        AppUser u = userDAO.findById(id);
-        if (u == null) {
-            req.getSession().setAttribute("flashError", "Không tìm thấy người dùng có ID: " + id);
-            resp.sendRedirect(req.getContextPath() + "/admin/users");
-            return;
-        }
-
-        req.setAttribute("userItem", u);
-        req.setAttribute("roles", roleDAO.getAllRoles());
-        req.setAttribute("isEdit", true);
-        req.getRequestDispatcher("/WEB-INF/views/user-form.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/user_form.jsp").forward(req, resp);
     }
 
     private void doCreate(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
         String username = req.getParameter("username");
+        String password = req.getParameter("password");
         String fullName = req.getParameter("fullName");
         String email = req.getParameter("email");
         String phone = req.getParameter("phone");
-        String password = req.getParameter("password");
         int roleId = WebUtil.parseInt(req.getParameter("roleId"), 0);
 
-        if (username == null || username.trim().isEmpty() ||
-            fullName == null || fullName.trim().isEmpty() ||
-            password == null || password.isEmpty() || roleId <= 0) {
-            req.setAttribute("errorMessage", "Vui lòng nhập đầy đủ các trường bắt buộc (Username, Mật khẩu, Họ tên, Vai trò).");
+        if (username == null || username.trim().isEmpty()
+            || password == null || password.isEmpty()
+            || fullName == null || fullName.trim().isEmpty()
+            || roleId <= 0) {
+            req.setAttribute("errorMessage", "Vui lòng nhập đầy đủ các trường bắt buộc.");
             req.setAttribute("roles", roleDAO.getAllRoles());
-            req.setAttribute("isEdit", false);
-            req.getRequestDispatcher("/WEB-INF/views/user-form.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/user_form.jsp").forward(req, resp);
             return;
         }
 
         username = username.trim().toLowerCase();
-        if (userDAO.isUsernameExists(username, null)) {
-            req.setAttribute("errorMessage", "Tên đăng nhập '" + username + "' đã tồn tại trên hệ thống.");
+        if (userDAO.findByUsername(username) != null) {
+            req.setAttribute("errorMessage", "Tên đăng nhập '" + username + "' đã tồn tại trong hệ thống.");
             req.setAttribute("roles", roleDAO.getAllRoles());
-            req.setAttribute("isEdit", false);
-            req.getRequestDispatcher("/WEB-INF/views/user-form.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/user_form.jsp").forward(req, resp);
             return;
         }
 
         AppUser u = new AppUser();
         u.setUsername(username);
+        u.setPassHash(PasswordUtil.hash(password));
         u.setFullName(fullName.trim());
         u.setEmail(email != null ? email.trim() : null);
         u.setPhone(phone != null ? phone.trim() : null);
         u.setRoleId(roleId);
         u.setLocked(false);
 
-        int newId = userDAO.insert(u, password);
+        int newId = userDAO.insert(u);
         if (newId > 0) {
-            req.getSession().setAttribute("flashSuccess", "Thêm người dùng '" + username + "' thành công!");
-            resp.sendRedirect(req.getContextPath() + "/admin/users");
+            resp.sendRedirect(req.getContextPath() + "/admin/users?success=created");
         } else {
-            req.setAttribute("errorMessage", "Có lỗi xảy ra trong quá trình lưu dữ liệu.");
+            req.setAttribute("errorMessage", "Không thể tạo tài khoản do lỗi cơ sở dữ liệu.");
             req.setAttribute("roles", roleDAO.getAllRoles());
-            req.setAttribute("isEdit", false);
-            req.getRequestDispatcher("/WEB-INF/views/user-form.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/user_form.jsp").forward(req, resp);
         }
+    }
+
+    private void showEditForm(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        int userId = WebUtil.parseInt(req.getParameter("id"), 0);
+        AppUser u = userDAO.findById(userId);
+        if (u == null) {
+            resp.sendRedirect(req.getContextPath() + "/admin/users?error=notfound");
+            return;
+        }
+        req.setAttribute("editUser", u);
+        req.setAttribute("roles", roleDAO.getAllRoles());
+        req.getRequestDispatcher("/WEB-INF/views/user_form.jsp").forward(req, resp);
     }
 
     private void doEdit(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-
-        int id = WebUtil.parseInt(req.getParameter("id"), 0);
-        AppUser existing = userDAO.findById(id);
-        if (existing == null) {
-            req.getSession().setAttribute("flashError", "Người dùng không tồn tại.");
-            resp.sendRedirect(req.getContextPath() + "/admin/users");
+        int userId = WebUtil.parseInt(req.getParameter("id"), 0);
+        AppUser u = userDAO.findById(userId);
+        if (u == null) {
+            resp.sendRedirect(req.getContextPath() + "/admin/users?error=notfound");
             return;
         }
 
@@ -183,81 +181,55 @@ public class UserServlet extends HttpServlet {
         String email = req.getParameter("email");
         String phone = req.getParameter("phone");
         int roleId = WebUtil.parseInt(req.getParameter("roleId"), 0);
+        boolean locked = "1".equals(req.getParameter("isLocked"));
 
         if (fullName == null || fullName.trim().isEmpty() || roleId <= 0) {
-            req.setAttribute("errorMessage", "Họ tên và vai trò không được để trống.");
-            req.setAttribute("userItem", existing);
+            req.setAttribute("errorMessage", "Họ tên và Vai trò không được để trống.");
+            req.setAttribute("editUser", u);
             req.setAttribute("roles", roleDAO.getAllRoles());
-            req.setAttribute("isEdit", true);
-            req.getRequestDispatcher("/WEB-INF/views/user-form.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/user_form.jsp").forward(req, resp);
             return;
         }
 
-        existing.setFullName(fullName.trim());
-        existing.setEmail(email != null ? email.trim() : null);
-        existing.setPhone(phone != null ? phone.trim() : null);
-        existing.setRoleId(roleId);
+        u.setFullName(fullName.trim());
+        u.setEmail(email != null ? email.trim() : null);
+        u.setPhone(phone != null ? phone.trim() : null);
+        u.setRoleId(roleId);
+        u.setLocked(locked);
 
-        boolean ok = userDAO.update(existing);
-        if (ok) {
-            req.getSession().setAttribute("flashSuccess", "Cập nhật tài khoản '" + existing.getUsername() + "' thành công!");
-            resp.sendRedirect(req.getContextPath() + "/admin/users");
+        if (userDAO.update(u)) {
+            resp.sendRedirect(req.getContextPath() + "/admin/users?success=updated");
         } else {
-            req.setAttribute("errorMessage", "Không thể cập nhật thông tin người dùng.");
-            req.setAttribute("userItem", existing);
+            req.setAttribute("errorMessage", "Lỗi cập nhật người dùng.");
+            req.setAttribute("editUser", u);
             req.setAttribute("roles", roleDAO.getAllRoles());
-            req.setAttribute("isEdit", true);
-            req.getRequestDispatcher("/WEB-INF/views/user-form.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/views/user_form.jsp").forward(req, resp);
         }
     }
 
     private void handleAction(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+        String act = req.getParameter("act");
+        int userId = WebUtil.parseInt(req.getParameter("id"), 0);
 
         HttpSession session = req.getSession();
         AppUser me = (AppUser) session.getAttribute("user");
 
-        String action = req.getParameter("act");
-        int targetId = WebUtil.parseInt(req.getParameter("id"), 0);
-
-        if (targetId <= 0) {
-            resp.sendRedirect(req.getContextPath() + "/admin/users");
+        if (me != null && me.getUserId() == userId && ("lock".equals(act) || "delete".equals(act))) {
+            resp.sendRedirect(req.getContextPath() + "/admin/users?error=self_action");
             return;
         }
 
-        AppUser target = userDAO.findById(targetId);
-        if (target == null) {
-            session.setAttribute("flashError", "Người dùng không tồn tại.");
-            resp.sendRedirect(req.getContextPath() + "/admin/users");
-            return;
+        if ("lock".equals(act)) {
+            userDAO.setLock(userId, true);
+        } else if ("unlock".equals(act)) {
+            userDAO.setLock(userId, false);
+        } else if ("reset".equals(act)) {
+            userDAO.updatePassword(userId, PasswordUtil.hash("123456"));
+        } else if ("delete".equals(act)) {
+            userDAO.delete(userId);
         }
 
-        if ("lock".equals(action)) {
-            if (target.getUserId() == me.getUserId()) {
-                session.setAttribute("flashError", "Bạn không thể tự khóa chính tài khoản của mình!");
-            } else {
-                userDAO.toggleLock(targetId, true);
-                session.setAttribute("flashSuccess", "Đã khóa tài khoản '" + target.getUsername() + "'.");
-            }
-        } else if ("unlock".equals(action)) {
-            userDAO.toggleLock(targetId, false);
-            session.setAttribute("flashSuccess", "Đã mở khóa tài khoản '" + target.getUsername() + "'.");
-        } else if ("reset".equals(action)) {
-            userDAO.resetPassword(targetId, "123456");
-            session.setAttribute("flashSuccess", "Đã đặt lại mật khẩu cho tài khoản '" + target.getUsername() + "' về mặc định: 123456");
-        } else if ("delete".equals(action)) {
-            if (target.getUserId() == me.getUserId()) {
-                session.setAttribute("flashError", "Bạn không thể tự xóa chính tài khoản của mình!");
-            } else {
-                boolean del = userDAO.delete(targetId);
-                if (del) {
-                    session.setAttribute("flashSuccess", "Đã xóa tài khoản '" + target.getUsername() + "'.");
-                } else {
-                    session.setAttribute("flashError", "Không thể xóa người dùng vì tài khoản này đã có dữ liệu tham chiếu (phiên/nhãn/cảnh báo). Khuyến nghị dùng tính năng 'Khóa tài khoản' thay thế.");
-                }
-            }
-        }
-
-        resp.sendRedirect(req.getContextPath() + "/admin/users");
+        resp.sendRedirect(req.getContextPath() + "/admin/users?success=" + act);
     }
 }

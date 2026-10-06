@@ -6,11 +6,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
 /**
- * Password hashing with PBKDF2, which ships inside the JDK. No extra jar is
- * needed, so the project opens and runs on the exam machine untouched.
- *
- * A stored value looks like  iterations:saltHex:hashHex  and already carries its
- * own salt, so two users with the same password get two different rows.
+ * Băm mật khẩu bằng PBKDF2WithHmacSHA256 (20,000 vòng băm + salt 16-byte).
  */
 public class PasswordUtil {
 
@@ -38,7 +34,7 @@ public class PasswordUtil {
             if (actual.length != expected.length) return false;
             int diff = 0;
             for (int i = 0; i < actual.length; i++) diff |= actual[i] ^ expected[i];
-            return diff == 0; // constant time compare
+            return diff == 0;
         } catch (Exception ex) {
             return false;
         }
@@ -49,34 +45,26 @@ public class PasswordUtil {
             KeySpec spec = new PBEKeySpec(plain, salt, iterations, KEY_BITS);
             SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
             return f.generateSecret(spec).getEncoded();
-        } catch (Exception e) {
-            throw new RuntimeException("Cannot hash the password with PBKDF2WithHmacSHA256", e);
+        } catch (Exception ex) {
+            throw new RuntimeException("PBKDF2 algorithm not supported in this JVM", ex);
         }
     }
 
-    private static String toHex(byte[] b) {
-        StringBuilder sb = new StringBuilder(b.length * 2);
-        for (int i = 0; i < b.length; i++) {
-            String h = Integer.toHexString(b[i] & 0xff);
-            if (h.length() == 1) sb.append('0');
-            sb.append(h);
+    private static String toHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder(bytes.length * 2);
+        for (byte b : bytes) {
+            sb.append(String.format("%02x", b & 0xff));
         }
         return sb.toString();
     }
 
-    private static byte[] fromHex(String s) {
-        byte[] out = new byte[s.length() / 2];
-        for (int i = 0; i < out.length; i++) {
-            out[i] = (byte) Integer.parseInt(s.substring(i * 2, i * 2 + 2), 16);
+    private static byte[] fromHex(String hex) {
+        int len = hex.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4)
+                                 + Character.digit(hex.charAt(i + 1), 16));
         }
-        return out;
-    }
-
-    public static void main(String[] args) {
-        String pwd = args.length > 0 ? args[0] : "123456";
-        String h = hash(pwd);
-        System.out.println("Password: " + pwd);
-        System.out.println("Hash: " + h);
-        System.out.println("Verify: " + verify(pwd, h));
+        return data;
     }
 }

@@ -1,168 +1,139 @@
-<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="java.util.List" %>
-<%@ page import="java.util.Map" %>
-<%@ page import="model.AppRole" %>
-<%@ page import="util.WebUtil" %>
-<%
-    List<AppRole> roles = (List<AppRole>) request.getAttribute("roles");
-    Map<Integer, Integer> userCounts = (Map<Integer, Integer>) request.getAttribute("userCounts");
-%>
+﻿<%@page import="java.util.List"%>
+<%@page import="java.util.Map"%>
+<%@page import="model.AppRole"%>
+<%@page import="util.WebUtil"%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vai trò & Phân quyền | VendGuard PRJ301</title>
-    <link rel="stylesheet" href="<%= request.getContextPath() %>/css/app.css">
+    <meta charset="UTF-8">
+    <title>Phân quyền & Vai trò - VendDB</title>
+    <link rel="stylesheet" href="<%=request.getContextPath()%>/css/style.css">
 </head>
 <body>
-    <jsp:include page="/WEB-INF/views/nav.jsp"/>
+    <jsp:include page="nav.jsp" />
 
-    <main class="main-wrapper">
-        <div class="page-header">
-            <div>
-                <h1 class="page-title">🛡️ Quản lý vai trò & Ma trận phân quyền</h1>
-                <p class="page-subtitle">Hệ thống phân quyền 5 vai trò độc lập theo đúng quy chuẩn Mục VI & VII đề tài PRJ301</p>
-            </div>
-            <div>
-                <a href="<%= request.getContextPath() %>/admin/users" class="btn btn-secondary">
-                    👥 Danh sách người dùng
-                </a>
-            </div>
-        </div>
-
-        <!-- Danh sach 5 vai tro -->
+    <div class="container">
         <div class="card">
             <div class="card-header">
-                <h2 class="card-title">1. Danh sách 5 vai trò hệ thống & Số lượng nhân sự</h2>
+                <div>
+                    <h2 class="card-title">🛡️ Danh sách Vai trò & Ma trận Quyền hệ thống</h2>
+                    <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.25rem;">
+                        5 vai trò chuẩn đề tài được kiểm soát chặt chẽ qua <code>AuthFilter</code>
+                    </p>
+                </div>
             </div>
-            <div class="table-responsive">
-                <table class="table">
+
+            <div class="table-responsive" style="margin-bottom:2rem;">
+                <table>
                     <thead>
                         <tr>
-                            <th style="width: 60px;">ID</th>
-                            <th>Mã vai trò (Role Code)</th>
-                            <th>Tên vai trò</th>
-                            <th>Mô tả chức năng</th>
-                            <th style="text-align: center;">Số lượng tài khoản</th>
+                            <th>Mã vai trò</th>
+                            <th>Tên hiển thị</th>
+                            <th>Mô tả trách nhiệm</th>
+                            <th style="text-align:center;">Số người dùng</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <% if (roles != null) {
-                            for (AppRole r : roles) {
-                                int count = userCounts != null && userCounts.get(r.getRoleId()) != null ? userCounts.get(r.getRoleId()) : 0;
-                                String roleBadgeClass = "badge-viewer";
-                                if ("ADMIN".equalsIgnoreCase(r.getRoleCode())) roleBadgeClass = "badge-admin";
-                                else if ("CATALOG_MANAGER".equalsIgnoreCase(r.getRoleCode())) roleBadgeClass = "badge-catalog";
-                                else if ("OPERATOR".equalsIgnoreCase(r.getRoleCode())) roleBadgeClass = "badge-operator";
-                                else if ("REVIEWER".equalsIgnoreCase(r.getRoleCode())) roleBadgeClass = "badge-reviewer";
+                        <%
+                            List<AppRole> roles = (List<AppRole>) request.getAttribute("roles");
+                            Map<Integer, Integer> userCounts = (Map<Integer, Integer>) request.getAttribute("userCounts");
+                            if (roles != null) {
+                                for (AppRole r : roles) {
+                                    int count = userCounts != null && userCounts.containsKey(r.getRoleId()) ? userCounts.get(r.getRoleId()) : 0;
                         %>
-                            <tr>
-                                <td><b>#<%= r.getRoleId() %></b></td>
-                                <td><span class="badge <%= roleBadgeClass %>"><%= r.getRoleCode() %></span></td>
-                                <td><b><%= r.getRoleName() %></b></td>
-                                <td style="color: var(--text-muted);"><%= r.getDescription() %></td>
-                                <td style="text-align: center;">
-                                    <span style="font-weight: 700; background: #e2e8f0; padding: 2px 10px; border-radius: 12px; font-size: 13px;">
-                                        <%= count %> user
-                                    </span>
-                                </td>
-                            </tr>
-                        <%  }
-                        } %>
+                        <tr>
+                            <td><span class="user-badge"><%=r.getRoleCode()%></span></td>
+                            <td><strong><%=WebUtil.esc(r.getRoleName())%></strong></td>
+                            <td style="color:var(--text-secondary);"><%=WebUtil.esc(r.getDescription())%></td>
+                            <td style="text-align:center;"><span class="badge badge-info"><%=count%></span></td>
+                        </tr>
+                        <%
+                                }
+                            }
+                        %>
                     </tbody>
                 </table>
             </div>
-        </div>
 
-        <!-- Ma tran quyen du lieu -->
-        <div class="card">
+            <!-- PERMISSION MATRIX -->
             <div class="card-header">
-                <h2 class="card-title">2. Bảng ma trận quyền trên từng đối tượng dữ liệu </h2>
-                <span style="font-size: 12px; color: var(--text-muted);">
-                    C: Thêm (Create) | R: Xem (Read) | U: Sửa (Update) | D: Xóa (Delete) | - : Không có quyền
-                </span>
+                <h3 class="card-title" style="font-size:1.1rem;">📋 Ma trận phân quyền theo Phân hệ</h3>
             </div>
-
             <div class="table-responsive">
-                <table class="table" style="text-align: center;">
+                <table>
                     <thead>
                         <tr>
-                            <th style="text-align: left;">Đối tượng dữ liệu</th>
-                            <th style="color: #991b1b; text-align: center;">ADMIN</th>
-                            <th style="color: #5b21b6; text-align: center;">CATALOG_MANAGER</th>
-                            <th style="color: #92400e; text-align: center;">OPERATOR</th>
-                            <th style="color: #1e40af; text-align: center;">REVIEWER</th>
-                            <th style="color: #334155; text-align: center;">VIEWER</th>
+                            <th>Phân hệ chức năng</th>
+                            <th style="text-align:center;">ADMIN</th>
+                            <th style="text-align:center;">CATALOG_MGR</th>
+                            <th style="text-align:center;">OPERATOR</th>
+                            <th style="text-align:center;">REVIEWER</th>
+                            <th style="text-align:center;">VIEWER</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td style="text-align: left;"><b>Phiên dữ liệu (Vend_Session)</b></td>
-                            <td><span class="badge badge-admin">C R U D</span></td>
-                            <td><span class="badge badge-catalog">R U</span></td>
-                            <td><span class="badge badge-operator">R U</span></td>
-                            <td><span class="badge badge-reviewer">R</span></td>
-                            <td><span class="badge badge-viewer">R</span></td>
+                            <td><strong>Quản trị Tài khoản & Thiết bị (/admin/*)</strong></td>
+                            <td style="text-align:center;"><span class="badge badge-success">Toàn quyền</span></td>
+                            <td style="text-align:center;"><span class="badge badge-danger">Không</span></td>
+                            <td style="text-align:center;"><span class="badge badge-danger">Không</span></td>
+                            <td style="text-align:center;"><span class="badge badge-danger">Không</span></td>
+                            <td style="text-align:center;"><span class="badge badge-danger">Không</span></td>
                         </tr>
                         <tr>
-                            <td style="text-align: left;"><b>Nhãn của phiên (Vend_Label)</b></td>
-                            <td><span class="badge badge-admin">C R U</span></td>
-                            <td><span class="badge badge-viewer">R</span></td>
-                            <td><span class="badge badge-viewer">R</span></td>
-                            <td><span class="badge badge-reviewer">C R U</span></td>
-                            <td><span class="badge badge-viewer">R</span></td>
+                            <td><strong>Danh mục Mặt hàng (/master/product*)</strong></td>
+                            <td style="text-align:center;"><span class="badge badge-success">Toàn quyền</span></td>
+                            <td style="text-align:center;"><span class="badge badge-success">Toàn quyền</span></td>
+                            <td style="text-align:center;"><span class="badge badge-info">Xem</span></td>
+                            <td style="text-align:center;"><span class="badge badge-danger">Không</span></td>
+                            <td style="text-align:center;"><span class="badge badge-danger">Không</span></td>
                         </tr>
                         <tr>
-                            <td style="text-align: left;"><b>Cảnh báo (Vend_Alert)</b></td>
-                            <td><span class="badge badge-admin">C R U D</span></td>
-                            <td><span class="badge badge-catalog">R U</span></td>
-                            <td><span class="badge badge-operator">R U</span></td>
-                            <td><span class="badge badge-reviewer">R U</span></td>
-                            <td><span class="badge badge-viewer">R</span></td>
+                            <td><strong>Quản lý Rãnh lò xo (/master/slot*)</strong></td>
+                            <td style="text-align:center;"><span class="badge badge-success">Toàn quyền</span></td>
+                            <td style="text-align:center;"><span class="badge badge-success">Cấu hình</span></td>
+                            <td style="text-align:center;"><span class="badge badge-warning">Khóa/Mở</span></td>
+                            <td style="text-align:center;"><span class="badge badge-danger">Không</span></td>
+                            <td style="text-align:center;"><span class="badge badge-danger">Không</span></td>
                         </tr>
                         <tr>
-                            <td style="text-align: left;"><b>Mặt hàng (Vend_Product)</b></td>
-                            <td><span class="badge badge-admin">C R U D</span></td>
-                            <td><span class="badge badge-catalog">C R U D</span></td>
-                            <td><span class="badge badge-operator">C R U D</span></td>
-                            <td><span class="badge badge-viewer">R</span></td>
-                            <td><span class="badge badge-viewer">R</span></td>
+                            <td><strong>Lập phiếu nạp hàng (/master/restock*)</strong></td>
+                            <td style="text-align:center;"><span class="badge badge-success">Toàn quyền</span></td>
+                            <td style="text-align:center;"><span class="badge badge-danger">Không</span></td>
+                            <td style="text-align:center;"><span class="badge badge-success">Tạo mới</span></td>
+                            <td style="text-align:center;"><span class="badge badge-danger">Không</span></td>
+                            <td style="text-align:center;"><span class="badge badge-danger">Không</span></td>
                         </tr>
                         <tr>
-                            <td style="text-align: left;"><b>Rãnh chứa hàng (Vend_Slot)</b></td>
-                            <td><span class="badge badge-admin">C R U D</span></td>
-                            <td><span class="badge badge-catalog">C R U D</span></td>
-                            <td><span class="badge badge-operator">C R U D</span></td>
-                            <td><span class="badge badge-viewer">R</span></td>
-                            <td><span class="badge badge-viewer">R</span></td>
+                            <td><strong>Kiểm duyệt & Sửa nhãn (/label/*)</strong></td>
+                            <td style="text-align:center;"><span class="badge badge-success">Toàn quyền</span></td>
+                            <td style="text-align:center;"><span class="badge badge-danger">Không</span></td>
+                            <td style="text-align:center;"><span class="badge badge-danger">Không</span></td>
+                            <td style="text-align:center;"><span class="badge badge-success">Sửa nhãn + Lý do</span></td>
+                            <td style="text-align:center;"><span class="badge badge-danger">Không</span></td>
                         </tr>
                         <tr>
-                            <td style="text-align: left;"><b>Phiếu nạp hàng (Vend_Restock)</b></td>
-                            <td><span class="badge badge-admin">C R U D</span></td>
-                            <td><span class="badge badge-catalog">C R U D</span></td>
-                            <td><span class="badge badge-operator">C R U D</span></td>
-                            <td><span class="badge badge-viewer">R</span></td>
-                            <td><span class="badge badge-viewer">R</span></td>
+                            <td><strong>Xử lý cảnh báo (/alert/resolve)</strong></td>
+                            <td style="text-align:center;"><span class="badge badge-success">Toàn quyền</span></td>
+                            <td style="text-align:center;"><span class="badge badge-danger">Không</span></td>
+                            <td style="text-align:center;"><span class="badge badge-success">Xử lý</span></td>
+                            <td style="text-align:center;"><span class="badge badge-danger">Không</span></td>
+                            <td style="text-align:center;"><span class="badge badge-danger">Không</span></td>
                         </tr>
-                        <tr style="background: #fef2f2;">
-                            <td style="text-align: left;"><b>Người dùng & Tài khoản (AppUser)</b></td>
-                            <td><span class="badge badge-admin">C R U D</span></td>
-                            <td style="color: #94a3b8; font-weight: bold;">-</td>
-                            <td style="color: #94a3b8; font-weight: bold;">-</td>
-                            <td style="color: #94a3b8; font-weight: bold;">-</td>
-                            <td style="color: #94a3b8; font-weight: bold;">-</td>
+                        <tr>
+                            <td><strong>Dashboard, Xem Phiên & Xuất CSV</strong></td>
+                            <td style="text-align:center;"><span class="badge badge-success">Xem + Xuất</span></td>
+                            <td style="text-align:center;"><span class="badge badge-success">Xem + Xuất</span></td>
+                            <td style="text-align:center;"><span class="badge badge-success">Xem + Xuất</span></td>
+                            <td style="text-align:center;"><span class="badge badge-success">Xem + Xuất</span></td>
+                            <td style="text-align:center;"><span class="badge badge-success">Xem + Xuất</span></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-
-            
         </div>
-    </main>
-
-    <footer class="footer">
-        Đồ án PRJ301 - Đề số 01: Máy bán hàng thu nhỏ tự phát hiện kẹt hàng &copy; Fall 2026. Trường Đại học FPT.
-    </footer>
+    </div>
 </body>
 </html>

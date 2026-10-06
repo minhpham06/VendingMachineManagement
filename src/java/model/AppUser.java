@@ -108,25 +108,4 @@ public class AppUser implements Serializable {
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
     }
-
-    // Cac ham tien ich kiem tra vai tro
-    public boolean isAdmin() {
-        return "ADMIN".equalsIgnoreCase(roleCode);
-    }
-
-    public boolean isCatalogManager() {
-        return "CATALOG_MANAGER".equalsIgnoreCase(roleCode);
-    }
-
-    public boolean isOperator() {
-        return "OPERATOR".equalsIgnoreCase(roleCode);
-    }
-
-    public boolean isReviewer() {
-        return "REVIEWER".equalsIgnoreCase(roleCode);
-    }
-
-    public boolean isViewer() {
-        return "VIEWER".equalsIgnoreCase(roleCode);
-    }
 }

@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import dao.AppUserDAO;
 import model.AppUser;
+import util.PasswordUtil;
 
 @WebServlet("/profile")
 public class ProfileServlet extends HttpServlet {
@@ -26,7 +27,6 @@ public class ProfileServlet extends HttpServlet {
             return;
         }
 
-        // Load lai du lieu moi nhat tu DB
         AppUser fresh = userDAO.findById(me.getUserId());
         if (fresh != null) {
             session.setAttribute("user", fresh);
@@ -56,20 +56,45 @@ public class ProfileServlet extends HttpServlet {
             String newPass = req.getParameter("newPassword");
             String confirmPass = req.getParameter("confirmPassword");
 
-            if (oldPass == null || oldPass.isEmpty() || newPass == null || newPass.isEmpty()) {
-                req.setAttribute("passError", "Vui lòng nhập đầy đủ mật khẩu cũ và mới.");
-            } else if (newPass.length() < 6) {
-                req.setAttribute("passError", "Mật khẩu mới phải có tối thiểu 6 ký tự.");
-            } else if (!newPass.equals(confirmPass)) {
-                req.setAttribute("passError", "Mật khẩu xác nhận không trùng khớp.");
-            } else {
-                boolean ok = userDAO.changePassword(me.getUserId(), oldPass, newPass);
-                if (ok) {
-                    req.setAttribute("passSuccess", "Đổi mật khẩu thành công!");
-                } else {
-                    req.setAttribute("passError", "Mật khẩu hiện tại không đúng.");
-                }
+            if (oldPass == null || newPass == null || confirmPass == null
+                || oldPass.isEmpty() || newPass.isEmpty() || confirmPass.isEmpty()) {
+                req.setAttribute("passError", "Vui lòng nhập đầy đủ các trường mật khẩu.");
+                req.setAttribute("user", me);
+                req.getRequestDispatcher("/WEB-INF/views/profile.jsp").forward(req, resp);
+                return;
             }
+
+            if (!newPass.equals(confirmPass)) {
+                req.setAttribute("passError", "Mật khẩu mới và xác nhận mật khẩu không khớp.");
+                req.setAttribute("user", me);
+                req.getRequestDispatcher("/WEB-INF/views/profile.jsp").forward(req, resp);
+                return;
+            }
+
+            if (newPass.length() < 6) {
+                req.setAttribute("passError", "Mật khẩu mới phải có tối thiểu 6 ký tự.");
+                req.setAttribute("user", me);
+                req.getRequestDispatcher("/WEB-INF/views/profile.jsp").forward(req, resp);
+                return;
+            }
+
+            // Kiểm tra mật khẩu cũ
+            AppUser dbUser = userDAO.findById(me.getUserId());
+            if (dbUser == null || !PasswordUtil.verify(oldPass, dbUser.getPassHash())) {
+                req.setAttribute("passError", "Mật khẩu cũ không chính xác.");
+                req.setAttribute("user", me);
+                req.getRequestDispatcher("/WEB-INF/views/profile.jsp").forward(req, resp);
+                return;
+            }
+
+            // Cập nhật mật khẩu mới
+            String newHash = PasswordUtil.hash(newPass);
+            if (userDAO.updatePassword(me.getUserId(), newHash)) {
+                req.setAttribute("passSuccess", "Đổi mật khẩu thành công!");
+            } else {
+                req.setAttribute("passError", "Không thể cập nhật mật khẩu.");
+            }
+
         } else if ("update_info".equals(action)) {
             String fullName = req.getParameter("fullName");
             String email = req.getParameter("email");
@@ -77,23 +102,24 @@ public class ProfileServlet extends HttpServlet {
 
             if (fullName == null || fullName.trim().isEmpty()) {
                 req.setAttribute("infoError", "Họ và tên không được để trống.");
+                req.setAttribute("user", me);
+                req.getRequestDispatcher("/WEB-INF/views/profile.jsp").forward(req, resp);
+                return;
+            }
+
+            me.setFullName(fullName.trim());
+            me.setEmail(email != null ? email.trim() : null);
+            me.setPhone(phone != null ? phone.trim() : null);
+
+            if (userDAO.update(me)) {
+                session.setAttribute("user", me);
+                req.setAttribute("infoSuccess", "Cập nhật thông tin thành công!");
             } else {
-                AppUser u = userDAO.findById(me.getUserId());
-                if (u != null) {
-                    u.setFullName(fullName.trim());
-                    u.setEmail(email != null ? email.trim() : null);
-                    u.setPhone(phone != null ? phone.trim() : null);
-                    boolean ok = userDAO.update(u);
-                    if (ok) {
-                        session.setAttribute("user", u);
-                        req.setAttribute("infoSuccess", "Cập nhật thông tin cá nhân thành công!");
-                    } else {
-                        req.setAttribute("infoError", "Không thể cập nhật thông tin.");
-                    }
-                }
+                req.setAttribute("infoError", "Lỗi khi cập nhật thông tin.");
             }
         }
 
-        doGet(req, resp);
+        req.setAttribute("user", me);
+        req.getRequestDispatcher("/WEB-INF/views/profile.jsp").forward(req, resp);
     }
 }

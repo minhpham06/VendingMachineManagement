@@ -8,13 +8,14 @@ public class VendSession implements Serializable {
 
     private int sessionId;
     private int deviceId;
-    private String deviceCode;
-    private Integer slotId;
+    private int slotId;
+    private String slotCode;
+    private String productName;
+    private double nominalWeight;
+    private double tolerance;
     private int deviceSeq;
     private Timestamp measuredAt;
     private Timestamp ingestedAt;
-    private boolean sample;
-    private String labelCode; // joined from Vend_Label table
     private double weightBefore;
     private double weightAfter;
     private double weightDelta;
@@ -22,52 +23,190 @@ public class VendSession implements Serializable {
     private int motorMs;
     private int settleMs;
     private double peakDelta;
+    private boolean sample;
 
-    public int getSessionId() { return sessionId; }
-    public void setSessionId(int v) { this.sessionId = v; }
+    // Latest label information
+    private String currentLabel;
+    private String labelSource;
+    private String labelReason;
+    private String reviewerName;
 
-    public int getDeviceId() { return deviceId; }
-    public void setDeviceId(int v) { this.deviceId = v; }
+    public VendSession() {
+    }
 
-    public String getDeviceCode() { return deviceCode; }
-    public void setDeviceCode(String deviceCode) { this.deviceCode = deviceCode; }
+    public int getSessionId() {
+        return sessionId;
+    }
 
-    public Integer getSlotId() { return slotId; }
-    public void setSlotId(Integer slotId) { this.slotId = slotId; }
+    public void setSessionId(int sessionId) {
+        this.sessionId = sessionId;
+    }
 
-    public int getDeviceSeq() { return deviceSeq; }
-    public void setDeviceSeq(int v) { this.deviceSeq = v; }
+    public int getDeviceId() {
+        return deviceId;
+    }
 
-    public Timestamp getMeasuredAt() { return measuredAt; }
-    public void setMeasuredAt(Timestamp v) { this.measuredAt = v; }
+    public void setDeviceId(int deviceId) {
+        this.deviceId = deviceId;
+    }
 
-    public Timestamp getIngestedAt() { return ingestedAt; }
-    public void setIngestedAt(Timestamp v) { this.ingestedAt = v; }
+    public int getSlotId() {
+        return slotId;
+    }
 
-    public boolean isSample() { return sample; }
-    public void setSample(boolean v) { this.sample = v; }
+    public void setSlotId(int slotId) {
+        this.slotId = slotId;
+    }
 
-    public String getLabelCode() { return labelCode; }
-    public void setLabelCode(String v) { this.labelCode = v; }
+    public String getSlotCode() {
+        return slotCode;
+    }
 
-    public double getWeightBefore() { return weightBefore; }
-    public void setWeightBefore(double v) { this.weightBefore = v; }
+    public void setSlotCode(String slotCode) {
+        this.slotCode = slotCode;
+    }
 
-    public double getWeightAfter() { return weightAfter; }
-    public void setWeightAfter(double v) { this.weightAfter = v; }
+    public String getProductName() {
+        return productName;
+    }
 
-    public double getWeightDelta() { return weightDelta; }
-    public void setWeightDelta(double v) { this.weightDelta = v; }
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
 
-    public int getCoilTurns() { return coilTurns; }
-    public void setCoilTurns(int v) { this.coilTurns = v; }
+    public double getNominalWeight() {
+        return nominalWeight;
+    }
 
-    public int getMotorMs() { return motorMs; }
-    public void setMotorMs(int v) { this.motorMs = v; }
+    public void setNominalWeight(double nominalWeight) {
+        this.nominalWeight = nominalWeight;
+    }
 
-    public int getSettleMs() { return settleMs; }
-    public void setSettleMs(int v) { this.settleMs = v; }
+    public double getTolerance() {
+        return tolerance;
+    }
 
-    public double getPeakDelta() { return peakDelta; }
-    public void setPeakDelta(double v) { this.peakDelta = v; }
+    public void setTolerance(double tolerance) {
+        this.tolerance = tolerance;
+    }
+
+    public int getDeviceSeq() {
+        return deviceSeq;
+    }
+
+    public void setDeviceSeq(int deviceSeq) {
+        this.deviceSeq = deviceSeq;
+    }
+
+    public Timestamp getMeasuredAt() {
+        return measuredAt;
+    }
+
+    public void setMeasuredAt(Timestamp measuredAt) {
+        this.measuredAt = measuredAt;
+    }
+
+    public Timestamp getIngestedAt() {
+        return ingestedAt;
+    }
+
+    public void setIngestedAt(Timestamp ingestedAt) {
+        this.ingestedAt = ingestedAt;
+    }
+
+    public double getWeightBefore() {
+        return weightBefore;
+    }
+
+    public void setWeightBefore(double weightBefore) {
+        this.weightBefore = weightBefore;
+    }
+
+    public double getWeightAfter() {
+        return weightAfter;
+    }
+
+    public void setWeightAfter(double weightAfter) {
+        this.weightAfter = weightAfter;
+    }
+
+    public double getWeightDelta() {
+        return weightDelta;
+    }
+
+    public void setWeightDelta(double weightDelta) {
+        this.weightDelta = weightDelta;
+    }
+
+    public int getCoilTurns() {
+        return coilTurns;
+    }
+
+    public void setCoilTurns(int coilTurns) {
+        this.coilTurns = coilTurns;
+    }
+
+    public int getMotorMs() {
+        return motorMs;
+    }
+
+    public void setMotorMs(int motorMs) {
+        this.motorMs = motorMs;
+    }
+
+    public int getSettleMs() {
+        return settleMs;
+    }
+
+    public void setSettleMs(int settleMs) {
+        this.settleMs = settleMs;
+    }
+
+    public double getPeakDelta() {
+        return peakDelta;
+    }
+
+    public void setPeakDelta(double peakDelta) {
+        this.peakDelta = peakDelta;
+    }
+
+    public boolean isSample() {
+        return sample;
+    }
+
+    public void setSample(boolean sample) {
+        this.sample = sample;
+    }
+
+    public String getCurrentLabel() {
+        return currentLabel;
+    }
+
+    public void setCurrentLabel(String currentLabel) {
+        this.currentLabel = currentLabel;
+    }
+
+    public String getLabelSource() {
+        return labelSource;
+    }
+
+    public void setLabelSource(String labelSource) {
+        this.labelSource = labelSource;
+    }
+
+    public String getLabelReason() {
+        return labelReason;
+    }
+
+    public void setLabelReason(String labelReason) {
+        this.labelReason = labelReason;
+    }
+
+    public String getReviewerName() {
+        return reviewerName;
+    }
+
+    public void setReviewerName(String reviewerName) {
+        this.reviewerName = reviewerName;
+    }
 }

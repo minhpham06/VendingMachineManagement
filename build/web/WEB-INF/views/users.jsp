@@ -1,202 +1,138 @@
-<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="java.util.List" %>
-<%@ page import="model.AppRole" %>
-<%@ page import="model.AppUser" %>
-<%@ page import="util.WebUtil" %>
-<%
-    List<AppUser> users = (List<AppUser>) request.getAttribute("users");
-    List<AppRole> roles = (List<AppRole>) request.getAttribute("roles");
-    int currentPage = (Integer) request.getAttribute("page");
-    int totalPages = (Integer) request.getAttribute("totalPages");
-    int totalUsers = (Integer) request.getAttribute("total");
-    String query = (String) request.getAttribute("query");
-    if (query == null) query = "";
-    Integer selectedRoleId = (Integer) request.getAttribute("selectedRoleId");
-    String selectedLocked = (String) request.getAttribute("selectedLocked");
-
-    AppUser currentUser = (AppUser) session.getAttribute("user");
-    String flashSuccess = (String) session.getAttribute("flashSuccess");
-    String flashError = (String) session.getAttribute("flashError");
-    session.removeAttribute("flashSuccess");
-    session.removeAttribute("flashError");
-%>
+﻿<%@page import="java.util.List"%>
+<%@page import="model.AppUser"%>
+<%@page import="model.AppRole"%>
+<%@page import="util.WebUtil"%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý người dùng | VendGuard PRJ301</title>
-    <link rel="stylesheet" href="<%= request.getContextPath() %>/css/app.css">
+    <meta charset="UTF-8">
+    <title>Quản lý người dùng - VendDB</title>
+    <link rel="stylesheet" href="<%=request.getContextPath()%>/css/style.css">
 </head>
 <body>
-    <jsp:include page="/WEB-INF/views/nav.jsp"/>
+    <jsp:include page="nav.jsp" />
 
-    <main class="main-wrapper">
-        <div class="page-header">
-            <div>
-                <h1 class="page-title">👥 Quản lý người dùng & Phân vai trò</h1>
-                <p class="page-subtitle">Tổng số: <b><%= totalUsers %></b> tài khoản trong hệ thống</p>
-            </div>
-            <div>
-                <a href="<%= request.getContextPath() %>/admin/user/create" class="btn btn-primary">
-                    ➕ Thêm người dùng mới
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">👥 Danh sách người dùng hệ thống</h2>
+                    <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.25rem;">
+                        Tổng cộng: <strong><%=request.getAttribute("totalUsers")%></strong> tài khoản
+                    </p>
+                </div>
+                <a href="<%=request.getContextPath()%>/admin/user/create" class="btn btn-primary">
+                    ➕ Thêm tài khoản mới
                 </a>
             </div>
-        </div>
 
-        <% if (flashSuccess != null && !flashSuccess.isEmpty()) { %>
-            <div class="alert alert-success">
-                <span>✅ <%= WebUtil.esc(flashSuccess) %></span>
-            </div>
-        <% } %>
+            <!-- SEARCH / FILTER -->
+            <form action="<%=request.getContextPath()%>/admin/users" method="GET" style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-bottom:1.25rem;">
+                <input type="text" name="q" value="<%=request.getAttribute("q") != null ? WebUtil.esc(request.getAttribute("q")) : ""%>" placeholder="Tìm theo username, họ tên, email..." style="flex:1; min-width:200px;">
 
-        <% if (flashError != null && !flashError.isEmpty()) { %>
-            <div class="alert alert-danger">
-                <span>⚠️ <%= WebUtil.esc(flashError) %></span>
-            </div>
-        <% } %>
-
-        <!-- Filter Bar -->
-        <form method="get" action="<%= request.getContextPath() %>/admin/users" class="filter-bar">
-            <div style="flex: 1; min-width: 200px;">
-                <input type="text" name="q" class="form-control" placeholder="Tìm theo username, họ tên, email..." 
-                       value="<%= WebUtil.esc(query) %>">
-            </div>
-
-            <div style="min-width: 180px;">
-                <select name="roleId" class="form-control">
+                <select name="roleId" style="width:180px;">
                     <option value="">-- Tất cả vai trò --</option>
-                    <% if (roles != null) {
-                        for (AppRole r : roles) { %>
-                            <option value="<%= r.getRoleId() %>" 
-                                <%= (selectedRoleId != null && selectedRoleId == r.getRoleId()) ? "selected" : "" %>>
-                                <%= r.getRoleName() %> (<%= r.getRoleCode() %>)
-                            </option>
-                    <%  }
-                    } %>
-                </select>
-            </div>
-
-            <div style="min-width: 150px;">
-                <select name="locked" class="form-control">
-                    <option value="">-- Trạng thái khóa --</option>
-                    <option value="0" <%= "0".equals(selectedLocked) ? "selected" : "" %>>Đang hoạt động</option>
-                    <option value="1" <%= "1".equals(selectedLocked) ? "selected" : "" %>>Bị khóa</option>
-                </select>
-            </div>
-
-            <button type="submit" class="btn btn-secondary">🔍 Lọc dữ liệu</button>
-            <a href="<%= request.getContextPath() %>/admin/users" class="btn btn-secondary" title="Đặt lại bộ lọc">↺</a>
-        </form>
-
-        <!-- User Table -->
-        <div class="table-responsive">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th style="width: 50px;">ID</th>
-                        <th>Tên đăng nhập</th>
-                        <th>Họ và tên</th>
-                        <th>Email / Điện thoại</th>
-                        <th>Vai trò hệ thống</th>
-                        <th>Trạng thái</th>
-                        <th>Ngày tạo</th>
-                        <th style="text-align: right; width: 220px;">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% if (users != null && !users.isEmpty()) {
-                        for (AppUser u : users) {
-                            String roleBadgeClass = "badge-viewer";
-                            if (u.isAdmin()) roleBadgeClass = "badge-admin";
-                            else if (u.isCatalogManager()) roleBadgeClass = "badge-catalog";
-                            else if (u.isOperator()) roleBadgeClass = "badge-operator";
-                            else if (u.isReviewer()) roleBadgeClass = "badge-reviewer";
+                    <%
+                        List<AppRole> roles = (List<AppRole>) request.getAttribute("roles");
+                        Integer selectedRoleId = (Integer) request.getAttribute("roleId");
+                        if (roles != null) {
+                            for (AppRole r : roles) {
                     %>
+                        <option value="<%=r.getRoleId()%>" <%=(selectedRoleId != null && selectedRoleId == r.getRoleId()) ? "selected" : ""%>><%=r.getRoleName()%></option>
+                    <%
+                            }
+                        }
+                    %>
+                </select>
+
+                <select name="locked" style="width:160px;">
+                    <option value="">-- Trạng thái --</option>
+                    <option value="0" <%="0".equals(request.getAttribute("locked")) ? "selected" : ""%>>Đang hoạt động</option>
+                    <option value="1" <%="1".equals(request.getAttribute("locked")) ? "selected" : ""%>>Đã bị khóa</option>
+                </select>
+
+                <button type="submit" class="btn btn-primary">🔍 Lọc</button>
+                <a href="<%=request.getContextPath()%>/admin/users" class="btn btn-outline">Xóa lọc</a>
+            </form>
+
+            <!-- USER TABLE -->
+            <div class="table-responsive">
+                <table>
+                    <thead>
                         <tr>
-                            <td><b>#<%= u.getUserId() %></b></td>
+                            <th>ID</th>
+                            <th>Tên đăng nhập</th>
+                            <th>Họ và tên</th>
+                            <th>Email / SĐT</th>
+                            <th>Vai trò</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày tạo</th>
+                            <th style="text-align:center;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <%
+                            List<AppUser> users = (List<AppUser>) request.getAttribute("users");
+                            if (users != null && !users.isEmpty()) {
+                                for (AppUser u : users) {
+                        %>
+                        <tr>
+                            <td><%=u.getUserId()%></td>
+                            <td><strong><%=WebUtil.esc(u.getUsername())%></strong></td>
+                            <td><%=WebUtil.esc(u.getFullName())%></td>
                             <td>
-                                <span style="font-weight: 700; color: var(--text-main);"><%= WebUtil.esc(u.getUsername()) %></span>
-                                <% if (currentUser != null && currentUser.getUserId() == u.getUserId()) { %>
-                                    <span style="font-size: 11px; background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; margin-left: 4px;">(Bạn)</span>
-                                <% } %>
+                                <div><%=WebUtil.esc(u.getEmail())%></div>
+                                <small style="color:var(--text-muted);"><%=WebUtil.esc(u.getPhone())%></small>
                             </td>
-                            <td><%= WebUtil.esc(u.getFullName()) %></td>
-                            <td>
-                                <div><%= u.getEmail() != null ? WebUtil.esc(u.getEmail()) : "-" %></div>
-                                <div style="font-size: 12px; color: var(--text-muted);"><%= u.getPhone() != null ? WebUtil.esc(u.getPhone()) : "" %></div>
-                            </td>
-                            <td>
-                                <span class="badge <%= roleBadgeClass %>"><%= u.getRoleCode() %></span>
-                            </td>
+                            <td><span class="user-badge"><%=u.getRoleCode()%></span></td>
                             <td>
                                 <% if (u.isLocked()) { %>
-                                    <span class="badge badge-locked">🔒 Đã khóa</span>
+                                    <span class="badge badge-danger">Đã khóa</span>
                                 <% } else { %>
-                                    <span class="badge badge-active">🟢 Hoạt động</span>
+                                    <span class="badge badge-success">Hoạt động</span>
                                 <% } %>
                             </td>
-                            <td style="font-size: 12.5px; color: var(--text-muted);">
-                                <%= WebUtil.formatDateTime(u.getCreatedAt()) %>
-                            </td>
-                            <td style="text-align: right;">
-                                <div style="display: inline-flex; gap: 6px;">
-                                    <a href="<%= request.getContextPath() %>/admin/user/edit?id=<%= u.getUserId() %>" 
-                                       class="btn btn-sm btn-secondary" title="Sửa thông tin">
-                                        ✏️ Sửa
-                                    </a>
-
-                                    <% if (currentUser != null && currentUser.getUserId() != u.getUserId()) { %>
-                                        <% if (u.isLocked()) { %>
-                                            <a href="<%= request.getContextPath() %>/admin/user/action?act=unlock&id=<%= u.getUserId() %>" 
-                                               class="btn btn-sm btn-success" title="Mở khóa tài khoản"
-                                               onclick="return confirm('Mở khóa cho tài khoản <%= u.getUsername() %>?');">
-                                                🔓 Mở
-                                            </a>
-                                        <% } else { %>
-                                            <a href="<%= request.getContextPath() %>/admin/user/action?act=lock&id=<%= u.getUserId() %>" 
-                                               class="btn btn-sm btn-danger" title="Khóa tài khoản"
-                                               onclick="return confirm('Bạn có chắc chắn muốn khóa tài khoản <%= u.getUsername() %>?');">
-                                                🔒 Khóa
-                                            </a>
-                                        <% } %>
-
-                                        <a href="<%= request.getContextPath() %>/admin/user/action?act=reset&id=<%= u.getUserId() %>" 
-                                           class="btn btn-sm btn-warning" title="Đặt lại mật khẩu về 123456"
-                                           onclick="return confirm('Đặt lại mật khẩu của <%= u.getUsername() %> về 123456?');">
-                                            🔑 Reset
-                                        </a>
+                            <td><%=WebUtil.formatDateTime(u.getCreatedAt())%></td>
+                            <td style="text-align:center;">
+                                <div style="display:inline-flex; gap:0.35rem;">
+                                    <a href="<%=request.getContextPath()%>/admin/user/edit?id=<%=u.getUserId()%>" class="btn btn-outline btn-sm">Sửa</a>
+                                    <% if (u.isLocked()) { %>
+                                        <a href="<%=request.getContextPath()%>/admin/user/action?act=unlock&id=<%=u.getUserId()%>" class="btn btn-success btn-sm" onclick="return confirm('Mở khóa tài khoản này?');">Mở</a>
+                                    <% } else { %>
+                                        <a href="<%=request.getContextPath()%>/admin/user/action?act=lock&id=<%=u.getUserId()%>" class="btn btn-warning btn-sm" onclick="return confirm('Khóa tài khoản này?');">Khóa</a>
                                     <% } %>
+                                    <a href="<%=request.getContextPath()%>/admin/user/action?act=reset&id=<%=u.getUserId()%>" class="btn btn-outline btn-sm" onclick="return confirm('Reset mật khẩu về 123456?');">Reset</a>
+                                    <a href="<%=request.getContextPath()%>/admin/user/action?act=delete&id=<%=u.getUserId()%>" class="btn btn-danger btn-sm" onclick="return confirm('Xóa vĩnh viễn tài khoản này?');">Xóa</a>
                                 </div>
                             </td>
                         </tr>
-                    <%  }
-                    } else { %>
+                        <%
+                                }
+                            } else {
+                        %>
                         <tr>
-                            <td colspan="8" style="text-align: center; padding: 36px; color: var(--text-muted);">
-                                Không tìm thấy người dùng nào phù hợp với điều kiện tìm kiếm.
-                            </td>
+                            <td colspan="8" style="text-align:center; color:var(--text-muted);">Không tìm thấy người dùng phù hợp.</td>
                         </tr>
-                    <% } %>
-                </tbody>
-            </table>
-        </div>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
 
-        <!-- Pagination -->
-        <% if (totalPages > 1) { %>
+            <!-- PAGINATION -->
+            <%
+                int currentPage = (Integer) request.getAttribute("currentPage");
+                int totalPages = (Integer) request.getAttribute("totalPages");
+                if (totalPages > 1) {
+            %>
             <div class="pagination">
                 <% for (int p = 1; p <= totalPages; p++) { %>
-                    <a href="?page=<%= p %>&q=<%= WebUtil.esc(query) %>&roleId=<%= selectedRoleId != null ? selectedRoleId : "" %>&locked=<%= selectedLocked != null ? selectedLocked : "" %>" 
-                       class="page-item <%= p == currentPage ? "active" : "" %>">
-                        <%= p %>
-                    </a>
+                    <a href="<%=request.getContextPath()%>/admin/users?page=<%=p%>&q=<%=(request.getAttribute("q")!=null?request.getAttribute("q"):"")%>&roleId=<%=(request.getAttribute("roleId")!=null?request.getAttribute("roleId"):"")%>&locked=<%=(request.getAttribute("locked")!=null?request.getAttribute("locked"):"")%>" class="<%=(p == currentPage ? "active" : "")%>"><%=p%></a>
                 <% } %>
             </div>
-        <% } %>
-    </main>
-
-    <footer class="footer">
-        Đồ án PRJ301 - Đề số 01: Máy bán hàng thu nhỏ tự phát hiện kẹt hàng &copy; Fall 2026. Trường Đại học FPT.
-    </footer>
+            <% } %>
+        </div>
+    </div>
 </body>
 </html>

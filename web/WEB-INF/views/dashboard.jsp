@@ -1,181 +1,271 @@
-<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="java.util.Map" %>
-<%@ page import="model.AppUser" %>
-<%@ page import="util.WebUtil" %>
-<%
-    AppUser user = (AppUser) request.getAttribute("currentUser");
-    int totalSessions = (Integer) request.getAttribute("totalSessions");
-    int totalUsers = (Integer) request.getAttribute("totalUsers");
-    int totalAlerts = (Integer) request.getAttribute("totalAlerts");
-    String successRate = (String) request.getAttribute("successRate");
-    Map<String, Integer> labelCounts = (Map<String, Integer>) request.getAttribute("labelCounts");
-
-    int successCount = labelCounts != null && labelCounts.get("SUCCESS") != null ? labelCounts.get("SUCCESS") : 0;
-    int jamCount = labelCounts != null && labelCounts.get("JAM") != null ? labelCounts.get("JAM") : 0;
-    int wrongCount = labelCounts != null && labelCounts.get("WRONG_ITEM") != null ? labelCounts.get("WRONG_ITEM") : 0;
-    int motorFailCount = labelCounts != null && labelCounts.get("MOTOR_FAIL") != null ? labelCounts.get("MOTOR_FAIL") : 0;
-%>
+﻿<%@page import="java.util.List"%>
+<%@page import="java.util.Map"%>
+<%@page import="util.WebUtil"%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng điều khiển | VendGuard PRJ301</title>
-    <link rel="stylesheet" href="<%= request.getContextPath() %>/css/app.css">
+    <meta charset="UTF-8">
+    <title>Tổng quan hệ thống - VendDB</title>
+    <link rel="stylesheet" href="<%=request.getContextPath()%>/css/style.css">
+    <style>
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 260px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas {
+            max-width: 100%;
+            max-height: 100%;
+        }
+    </style>
 </head>
 <body>
-    <jsp:include page="/WEB-INF/views/nav.jsp"/>
+    <jsp:include page="nav.jsp" />
 
-    <main class="main-wrapper">
-        <div class="page-header">
-            <div>
-                <h1 class="page-title">📊 Bảng điều khiển tổng quan</h1>
-                <p class="page-subtitle">Hệ thống giám sát máy bán hàng tự phát hiện kẹt hàng qua vòng xoay lò xo và khối lượng khay</p>
-            </div>
-            <div>
-                <span class="badge <%= user.isAdmin() ? "badge-admin" : "badge-viewer" %>" style="font-size: 13px; padding: 6px 14px;">
-                    Vai trò hiện tại: <%= user.getRoleCode() %>
-                </span>
-            </div>
-        </div>
+    <div class="container">
+        <!-- KPI METRICS -->
+        <%
+            int totalSessions = (Integer) request.getAttribute("totalSessions");
+            int totalAlerts = (Integer) request.getAttribute("totalAlerts");
+            int totalProducts = (Integer) request.getAttribute("totalProducts");
+            int totalSlots = (Integer) request.getAttribute("totalSlots");
+            Map<String, Integer> labelCounts = (Map<String, Integer>) request.getAttribute("labelCounts");
+            int successCnt = labelCounts.get("SUCCESS");
+            int jamCnt = labelCounts.get("JAM");
+            int wrongCnt = labelCounts.get("WRONG_ITEM");
+            int motorCnt = labelCounts.get("MOTOR_FAIL");
+            double successRate = totalSessions > 0 ? (double) successCnt / totalSessions * 100.0 : 0.0;
+        %>
 
-        <!-- KPI Stats Cards -->
         <div class="stats-grid">
             <div class="stat-card">
-                <div>
-                    <div class="stat-label">Tổng lượt nhả hàng</div>
-                    <div class="stat-value"><%= totalSessions %></div>
-                    <div class="stat-sub">Dữ liệu mẫu ban đầu: 240 phiên</div>
-                </div>
-                <div class="stat-icon blue">📦</div>
+                <span class="stat-label">Tổng lượt nhả hàng</span>
+                <span class="stat-val"><%=totalSessions%></span>
             </div>
-
-            <div class="stat-card">
-                <div>
-                    <div class="stat-label">Tỷ lệ thành công</div>
-                    <div class="stat-value" style="color: #10b981;"><%= successRate %>%</div>
-                    <div class="stat-sub"><%= successCount %> phiên SUCCESS</div>
-                </div>
-                <div class="stat-icon green">✅</div>
+            <div class="stat-card success">
+                <span class="stat-label">Thành công (SUCCESS)</span>
+                <span class="stat-val"><%=successCnt%> <small style="font-size:0.9rem; color:var(--success);">(<%=String.format("%.1f", successRate)%>%)</small></span>
             </div>
-
-            <div class="stat-card">
-                <div>
-                    <div class="stat-label">Cảnh báo kẹt / lỗi</div>
-                    <div class="stat-value" style="color: #ef4444;"><%= totalAlerts %></div>
-                    <div class="stat-sub">Sự cố cần can thiệp</div>
-                </div>
-                <div class="stat-icon red">⚠️</div>
+            <div class="stat-card danger">
+                <span class="stat-label">Kẹt hàng (JAM)</span>
+                <span class="stat-val"><%=jamCnt%></span>
             </div>
-
-            <div class="stat-card">
-                <div>
-                    <div class="stat-label">Tài khoản nhân sự</div>
-                    <div class="stat-value"><%= totalUsers %></div>
-                    <div class="stat-sub">5 vai trò hệ thống</div>
-                </div>
-                <div class="stat-icon purple">👥</div>
+            <div class="stat-card warning">
+                <span class="stat-label">Rơi 2 món / Sai (WRONG)</span>
+                <span class="stat-val"><%=wrongCnt%></span>
+            </div>
+            <div class="stat-card purple">
+                <span class="stat-label">Lỗi động cơ (MOTOR_FAIL)</span>
+                <span class="stat-val"><%=motorCnt%></span>
+            </div>
+            <div class="stat-card <%=(totalAlerts > 0 ? "danger" : "")%>">
+                <span class="stat-label">Cảnh báo chưa xử lý</span>
+                <span class="stat-val"><%=totalAlerts%></span>
             </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
-            <!-- Phan bo nhan phien -->
+        <!-- CHARTS SECTION -->
+        <div class="charts-grid">
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">📈 Phân bố nhãn kết quả phân loại</h2>
-                    <span style="font-size: 12px; color: var(--text-muted);">Quy tắc tự động & Duyệt nhãn</span>
+                    <h3 class="card-title">🍩 Cơ cấu phân loại lượt nhả</h3>
                 </div>
-
-                <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 10px;">
-                    <div>
-                        <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px;">
-                            <span class="badge badge-success">SUCCESS - Thành công</span>
-                            <b><%= successCount %> phiên (<%= totalSessions > 0 ? (successCount * 100 / totalSessions) : 0 %>%)</b>
-                        </div>
-                        <div style="height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden;">
-                            <div style="height: 100%; background: #10b981; width: <%= totalSessions > 0 ? (successCount * 100 / totalSessions) : 0 %>%;"></div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px;">
-                            <span class="badge badge-jam">JAM - Kẹt hàng trong rãnh</span>
-                            <b><%= jamCount %> phiên (<%= totalSessions > 0 ? (jamCount * 100 / totalSessions) : 0 %>%)</b>
-                        </div>
-                        <div style="height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden;">
-                            <div style="height: 100%; background: #ef4444; width: <%= totalSessions > 0 ? (jamCount * 100 / totalSessions) : 0 %>%;"></div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px;">
-                            <span class="badge badge-wrong">WRONG_ITEM - Sai / Rơi đôi</span>
-                            <b><%= wrongCount %> phiên (<%= totalSessions > 0 ? (wrongCount * 100 / totalSessions) : 0 %>%)</b>
-                        </div>
-                        <div style="height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden;">
-                            <div style="height: 100%; background: #f59e0b; width: <%= totalSessions > 0 ? (wrongCount * 100 / totalSessions) : 0 %>%;"></div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px;">
-                            <span class="badge badge-motor">MOTOR_FAIL - Lỗi động cơ</span>
-                            <b><%= motorFailCount %> phiên (<%= totalSessions > 0 ? (motorFailCount * 100 / totalSessions) : 0 %>%)</b>
-                        </div>
-                        <div style="height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden;">
-                            <div style="height: 100%; background: #8b5cf6; width: <%= totalSessions > 0 ? (motorFailCount * 100 / totalSessions) : 0 %>%;"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
-                    <a href="<%= request.getContextPath() %>/sessions" class="btn btn-secondary btn-sm">
-                        Xem chi tiết danh sách phiên ➔
-                    </a>
+                <div class="canvas-container">
+                    <canvas id="donutChart" width="360" height="240"></canvas>
                 </div>
             </div>
 
-            <!-- Thong tin vai tro & Phim tat -->
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">🛡️ Quyền hạn của bạn</h2>
+                    <h3 class="card-title">📊 Tỷ lệ kẹt theo mặt hàng (%)</h3>
                 </div>
-
-                <div style="margin-bottom: 16px;">
-                    <p style="font-size: 13px; color: var(--text-muted);">Bạn đang đăng nhập với vai trò:</p>
-                    <div style="font-size: 16px; font-weight: 700; color: var(--primary-dark); margin: 4px 0 10px;">
-                        <%= user.getRoleName() != null ? user.getRoleName() : user.getRoleCode() %>
-                    </div>
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <% if (user.isAdmin()) { %>
-                        <a href="<%= request.getContextPath() %>/admin/users" class="btn btn-primary" style="justify-content: flex-start;">
-                            👥 Quản lý người dùng
-                        </a>
-                        <a href="<%= request.getContextPath() %>/admin/roles" class="btn btn-secondary" style="justify-content: flex-start;">
-                            🛡️ Xem ma trận phân quyền
-                        </a>
-                    <% } %>
-
-                    <a href="<%= request.getContextPath() %>/sessions" class="btn btn-secondary" style="justify-content: flex-start;">
-                        📦 Xem danh sách phiên đo
-                    </a>
-
-                    <a href="<%= request.getContextPath() %>/profile" class="btn btn-secondary" style="justify-content: flex-start;">
-                        🔑 Đổi mật khẩu cá nhân
-                    </a>
-                </div>
-
-                <div style="margin-top: 20px; padding: 12px; background: #f8fafc; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 12px; color: var(--text-muted);">
-                    💡 <b>Quy định bảo mật:</b> Hệ thống kiểm soát quyền từ phía Server qua bộ lọc <code>AuthFilter</code>. Mọi hành vi truy cập trái phép bằng cách dán URL sẽ bị chặn với mã <b>HTTP 403 Forbidden</b>.
+                <div class="canvas-container">
+                    <canvas id="barChart" width="380" height="240"></canvas>
                 </div>
             </div>
         </div>
-    </main>
 
-    <footer class="footer">
-        Đồ án PRJ301 - Đề số 01: Máy bán hàng thu nhỏ tự phát hiện kẹt hàng &copy; Fall 2026. Trường Đại học FPT.
+        <!-- PRODUCT STATS TABLE -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">📦 Thống kê chi tiết theo Mặt hàng & Rãnh</h3>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mặt hàng</th>
+                            <th>Tổng lượt chạy</th>
+                            <th>Thành công</th>
+                            <th>Kẹt hàng (JAM)</th>
+                            <th>Tỷ lệ kẹt</th>
+                            <th>Đánh giá rủi ro</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <%
+                            List<Map<String, Object>> pStats = (List<Map<String, Object>>) request.getAttribute("productStats");
+                            if (pStats != null && !pStats.isEmpty()) {
+                                for (Map<String, Object> p : pStats) {
+                                    double rate = (Double) p.get("jamRate");
+                        %>
+                        <tr>
+                            <td><strong><%=WebUtil.esc(p.get("name"))%></strong></td>
+                            <td><%=p.get("total")%></td>
+                            <td><span class="badge badge-success"><%=p.get("success")%></span></td>
+                            <td><span class="badge badge-danger"><%=p.get("jam")%></span></td>
+                            <td><strong><%=String.format("%.1f", rate)%>%</strong></td>
+                            <td>
+                                <% if (rate > 20.0) { %>
+                                    <span class="badge badge-danger">Rủi ro cao (Cần chỉnh lò xo)</span>
+                                <% } else if (rate > 10.0) { %>
+                                    <span class="badge badge-warning">Cảnh báo trung bình</span>
+                                <% } else { %>
+                                    <span class="badge badge-success">Ổn định</span>
+                                <% } %>
+                            </td>
+                        </tr>
+                        <%
+                                }
+                            } else {
+                        %>
+                        <tr>
+                            <td colspan="6" style="text-align:center; color:var(--text-muted);">Chưa có dữ liệu thống kê mặt hàng.</td>
+                        </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        Dự án PRJ301 - Đề số 01: Máy bán hàng tự động phát hiện kẹt hàng &copy; Fall 2026
     </footer>
+
+    <!-- SCRIPT VE BIEU DO CANVAS THUAN (KHONG DUNG THU VIEN NGOAI) -->
+    <script>
+        // 1. Ve bieu do hinh tron Donut
+        (function() {
+            const canvas = document.getElementById('donutChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const data = [
+                { label: 'SUCCESS', val: <%=successCnt%>, color: '#10b981' },
+                { label: 'JAM', val: <%=jamCnt%>, color: '#ef4444' },
+                { label: 'WRONG', val: <%=wrongCnt%>, color: '#f59e0b' },
+                { label: 'MOTOR', val: <%=motorCnt%>, color: '#8b5cf6' }
+            ];
+            const total = <%=totalSessions%>;
+            if (total === 0) return;
+
+            let startAngle = -0.5 * Math.PI;
+            const cx = 130, cy = 120, r = 85, innerR = 50;
+
+            data.forEach(item => {
+                const sliceAngle = (item.val / total) * 2 * Math.PI;
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, startAngle, startAngle + sliceAngle);
+                ctx.arc(cx, cy, innerR, startAngle + sliceAngle, startAngle, true);
+                ctx.closePath();
+                ctx.fillStyle = item.color;
+                ctx.fill();
+                startAngle += sliceAngle;
+            });
+
+            // Legend
+            let legendY = 45;
+            data.forEach(item => {
+                ctx.fillStyle = item.color;
+                ctx.fillRect(240, legendY, 12, 12);
+                ctx.fillStyle = '#f8fafc';
+                ctx.font = '12px Segoe UI';
+                const pct = total > 0 ? ((item.val/total)*100).toFixed(1) : 0;
+                ctx.fillText(item.label + ': ' + item.val + ' (' + pct + '%)', 260, legendY + 10);
+                legendY += 32;
+            });
+        })();
+
+        // 2. Ve bieu do cot Bar Chart
+        (function() {
+            const canvas = document.getElementById('barChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            const prodNames = [
+                <% if (pStats != null) {
+                    for (int i=0; i<pStats.size(); i++) { %>
+                        "<%=WebUtil.esc(pStats.get(i).get("name"))%>"<%= (i < pStats.size()-1) ? "," : "" %>
+                <% } } %>
+            ];
+            const jamRates = [
+                <% if (pStats != null) {
+                    for (int i=0; i<pStats.size(); i++) { %>
+                        <%=String.format("%.1f", (Double)pStats.get(i).get("jamRate"))%><%= (i < pStats.size()-1) ? "," : "" %>
+                <% } } %>
+            ];
+
+            if (prodNames.length === 0) return;
+
+            const paddingLeft = 40, paddingBottom = 40, chartW = 320, chartH = 170;
+            const maxVal = 40; // Max 40%
+
+            // Axes
+            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(paddingLeft, 20);
+            ctx.lineTo(paddingLeft, 20 + chartH);
+            ctx.lineTo(paddingLeft + chartW, 20 + chartH);
+            ctx.stroke();
+
+            // Y-axis labels
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '10px Segoe UI';
+            ctx.fillText('40%', 10, 25);
+            ctx.fillText('20%', 10, 20 + chartH/2);
+            ctx.fillText('0%', 15, 20 + chartH);
+
+            const barW = 45;
+            const gap = (chartW - (prodNames.length * barW)) / (prodNames.length + 1);
+
+            prodNames.forEach((name, idx) => {
+                const rate = jamRates[idx] || 0;
+                const h = (rate / maxVal) * chartH;
+                const x = paddingLeft + gap + idx * (barW + gap);
+                const y = 20 + chartH - h;
+
+                // Bar gradient
+                const grad = ctx.createLinearGradient(x, y, x, y + h);
+                grad.addColorStop(0, '#f87171');
+                grad.addColorStop(1, '#dc2626');
+
+                ctx.fillStyle = grad;
+                ctx.fillRect(x, y, barW, h);
+
+                // Label rate on top
+                ctx.fillStyle = '#f8fafc';
+                ctx.font = 'bold 11px Segoe UI';
+                ctx.fillText(rate + '%', x + 8, y - 5);
+
+                // Product label below
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '10px Segoe UI';
+                const shortName = name.length > 10 ? name.substring(0, 10) + '..' : name;
+                ctx.fillText(shortName, x - 5, 20 + chartH + 18);
+            });
+        })();
+    </script>
 </body>
 </html>
