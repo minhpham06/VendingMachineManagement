@@ -22,13 +22,13 @@
     <div class="container" style="max-width: 600px;">
         <div class="card">
             <div class="card-header">
-                <h2 class="card-title"><%=(isEdit ? "✏️ Chỉnh sửa thông tin tài khoản" : "➕ Thêm tài khoản người dùng mới")%></h2>
-                <a href="<%=request.getContextPath()%>/admin/users" class="btn btn-outline btn-sm">⬅️ Quay lại</a>
+                <h2 class="card-title"><%=(isEdit ? " Chỉnh sửa thông tin tài khoản" : " Thêm tài khoản người dùng mới")%></h2>
+                <a href="<%=request.getContextPath()%>/admin/users" class="btn btn-outline btn-sm">⬅ Quay lại</a>
             </div>
 
             <% if (request.getAttribute("errorMessage") != null) { %>
                 <div class="alert alert-danger">
-                    <span>⚠️ <%=request.getAttribute("errorMessage")%></span>
+                    <span> <%=request.getAttribute("errorMessage")%></span>
                 </div>
             <% } %>
 
@@ -89,7 +89,7 @@
 
                 <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.5rem;">
                     <a href="<%=request.getContextPath()%>/admin/users" class="btn btn-outline">Hủy bỏ</a>
-                    <button type="submit" class="btn btn-primary"><%=(isEdit ? "💾 Lưu thay đổi" : "➕ Tạo người dùng")%></button>
+                    <button type="submit" class="btn btn-primary"><%=(isEdit ? " Lưu thay đổi" : " Tạo người dùng")%></button>
                 </div>
             </form>
         </div>

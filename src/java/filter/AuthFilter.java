@@ -87,8 +87,9 @@ public class AuthFilter implements Filter {
             return;
         }
 
-        // 2. Cho phép trang Login / Logout và trang chủ
-        if ("/login".equals(path) || "/logout".equals(path) || "/".equals(path) || "/index.jsp".equals(path)) {
+        // 2. Cho phép trang Login / Logout, trang chủ và luồng thanh toán VNPay (không cần đăng nhập)
+        if ("/login".equals(path) || "/logout".equals(path) || "/".equals(path) || "/index.jsp".equals(path)
+            || path.startsWith("/vnpay") || path.contains("vnpay")) {
             chain.doFilter(request, response);
             return;
         }

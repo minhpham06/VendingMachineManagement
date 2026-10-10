@@ -21,12 +21,12 @@
     <div class="container" style="max-width: 600px;">
         <div class="card">
             <div class="card-header">
-                <h2 class="card-title">⚙️ Cấu hình Rãnh lò xo: <%=slot.getCode()%></h2>
-                <a href="<%=request.getContextPath()%>/master/slots" class="btn btn-outline btn-sm">⬅️ Quay lại</a>
+                <h2 class="card-title"> Cấu hình Rãnh lò xo: <%=slot.getCode()%></h2>
+                <a href="<%=request.getContextPath()%>/master/slots" class="btn btn-outline btn-sm">⬅ Quay lại</a>
             </div>
 
             <% if (request.getAttribute("errorMessage") != null) { %>
-                <div class="alert alert-danger"><span>⚠️ <%=request.getAttribute("errorMessage")%></span></div>
+                <div class="alert alert-danger"><span> <%=request.getAttribute("errorMessage")%></span></div>
             <% } %>
 
             <form action="<%=request.getContextPath()%>/master/slot/edit?id=<%=slot.getSlotId()%>" method="POST">
@@ -69,7 +69,7 @@
 
                 <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.5rem;">
                     <a href="<%=request.getContextPath()%>/master/slots" class="btn btn-outline">Hủy bỏ</a>
-                    <button type="submit" class="btn btn-primary">💾 Lưu cấu hình</button>
+                    <button type="submit" class="btn btn-primary"> Lưu cấu hình</button>
                 </div>
             </form>
         </div>

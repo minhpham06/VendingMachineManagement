@@ -23,7 +23,7 @@
         <div class="card">
             <div class="card-header">
                 <div>
-                    <h2 class="card-title">⚠️ Động cơ Cảnh báo Thông minh (Smart Alert Engine)</h2>
+                    <h2 class="card-title"> Động cơ Cảnh báo Thông minh (Smart Alert Engine)</h2>
                     <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.25rem;">
                         4 quy tắc đề tài: Kẹt rãnh liên tiếp (JAM Streak), Cảnh báo sắp hết hàng (Low Stock), Trôi dạt cảm biến (Drift) & Mòn động cơ
                     </p>
@@ -39,7 +39,7 @@
             </div>
 
             <% if ("resolved".equals(request.getParameter("success"))) { %>
-                <div class="alert alert-success"><span>✅ Đã xử lý và đóng cảnh báo thành công!</span></div>
+                <div class="alert alert-success"><span> Đã xử lý và đóng cảnh báo thành công!</span></div>
             <% } %>
 
             <div class="table-responsive">
@@ -96,7 +96,7 @@
                                     <form action="<%=request.getContextPath()%>/alert/resolve" method="POST" style="display:inline;">
                                         <input type="hidden" name="id" value="<%=a.getAlertId()%>">
                                         <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Đánh dấu đã xử lý cảnh báo này?');">
-                                            ✓ Xử lý
+                                             Xử lý
                                         </button>
                                     </form>
                                 <% } else { %>

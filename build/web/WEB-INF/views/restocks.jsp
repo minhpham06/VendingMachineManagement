@@ -22,20 +22,20 @@
         <div class="card">
             <div class="card-header">
                 <div>
-                    <h2 class="card-title">📥 Lịch sử Phiếu Nạp Hàng (Restock Logs)</h2>
+                    <h2 class="card-title"> Lịch sử Phiếu Nạp Hàng (Restock Logs)</h2>
                     <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.25rem;">
                         Nhật ký các lượt bổ sung bánh kẹo vào rãnh máy bán hàng của Nhân viên vận hành (OPERATOR)
                     </p>
                 </div>
                 <% if (canRestock) { %>
                     <a href="<%=request.getContextPath()%>/master/restock/create" class="btn btn-primary">
-                        ➕ Lập phiếu nạp hàng
+                         Lập phiếu nạp hàng
                     </a>
                 <% } %>
             </div>
 
             <% if ("created".equals(request.getParameter("success"))) { %>
-                <div class="alert alert-success"><span>✅ Đã tạo phiếu nạp hàng và cập nhật tồn kho thành công!</span></div>
+                <div class="alert alert-success"><span> Đã tạo phiếu nạp hàng và cập nhật tồn kho thành công!</span></div>
             <% } %>
 
             <div class="table-responsive">

@@ -1,4 +1,4 @@
-﻿<%@page import="java.util.List"%>
+<%@page import="java.util.List"%>
 <%@page import="model.VendSession"%>
 <%@page import="model.VendLabel"%>
 <%@page import="model.AppUser"%>
@@ -20,19 +20,44 @@
     <style>
         .detail-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 1.25rem;
+            margin-bottom: 1.25rem;
+            width: 100%;
         }
         @media (max-width: 768px) {
-            .detail-grid { grid-template-columns: 1fr; }
+            .detail-grid {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+            }
         }
         .canvas-container {
             width: 100%;
-            height: 250px;
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
+            padding: 0.5rem 0;
+        }
+        .spec-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+        }
+        .spec-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.45rem;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+        }
+        .spec-label {
+            color: var(--text-secondary);
+            font-size: 0.88rem;
         }
     </style>
 </head>
@@ -41,40 +66,40 @@
 
     <div class="container">
         <!-- HEADER -->
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
             <div>
-                <h1 style="font-size:1.5rem;">🔬 Chi tiết Phiên Thực Nghiệm: Seq #<%=s.getDeviceSeq()%></h1>
-                <p style="color:var(--text-secondary); font-size:0.85rem;">Mã phiên hệ thống: #<%=s.getSessionId()%> | Thời gian: <%=WebUtil.formatDateTime(s.getMeasuredAt())%></p>
+                <h1 style="font-size:1.4rem;"> Chi tiết Phiên Thực Nghiệm: Seq #<%=s.getDeviceSeq()%></h1>
+                <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:0.25rem;">Mã phiên hệ thống: #<%=s.getSessionId()%> | Thời gian: <%=WebUtil.formatDateTime(s.getMeasuredAt())%></p>
             </div>
-            <a href="<%=request.getContextPath()%>/sessions" class="btn btn-outline">⬅️ Danh sách phiên</a>
+            <a href="<%=request.getContextPath()%>/sessions" class="btn btn-outline btn-sm">⬅ Danh sách phiên</a>
         </div>
 
         <% if ("corrected".equals(request.getParameter("success"))) { %>
-            <div class="alert alert-success"><span>✅ Đã cập nhật và lưu vết lịch sử hiệu chỉnh nhãn thành công!</span></div>
+            <div class="alert alert-success"><span> Đã cập nhật và lưu vết lịch sử hiệu chỉnh nhãn thành công!</span></div>
         <% } %>
         <% if (request.getAttribute("errorMessage") != null) { %>
-            <div class="alert alert-danger"><span>⚠️ <%=request.getAttribute("errorMessage")%></span></div>
+            <div class="alert alert-danger"><span> <%=request.getAttribute("errorMessage")%></span></div>
         <% } %>
 
         <div class="detail-grid">
             <!-- COT 1: THONG SO VAT LY -->
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">⚙️ Thông số Đo đạc Thực nghiệm</h3>
+                    <h3 class="card-title"> Thông số Đo đạc Thực nghiệm</h3>
                     <span class="badge badge-info"><%=s.isSample() ? "Dữ liệu mẫu" : "Thực nghiệm ESP32"%></span>
                 </div>
 
-                <div style="display:flex; flex-direction:column; gap:0.85rem; font-size:0.92rem;">
-                    <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:0.4rem;">
-                        <span style="color:var(--text-secondary);">Rãnh máy / Mặt hàng:</span>
+                <div class="spec-list">
+                    <div class="spec-row">
+                        <span class="spec-label">Rãnh máy / Mặt hàng:</span>
                         <strong><%=s.getSlotCode()%> - <%=WebUtil.esc(s.getProductName())%></strong>
                     </div>
-                    <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:0.4rem;">
-                        <span style="color:var(--text-secondary);">Khối lượng danh định chuẩn:</span>
+                    <div class="spec-row">
+                        <span class="spec-label">Khối lượng danh định chuẩn:</span>
                         <span><%=WebUtil.formatWeight(s.getNominalWeight())%> (&plusmn;<%=WebUtil.formatWeight(s.getTolerance())%>)</span>
                     </div>
-                    <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:0.4rem;">
-                        <span style="color:var(--text-secondary);">Cảm biến trục động cơ (Reed Switch):</span>
+                    <div class="spec-row">
+                        <span class="spec-label">Cảm biến trục động cơ (Reed Switch):</span>
                         <span>
                             <% if (s.getCoilTurns() >= 1) { %>
                                 <span class="badge badge-success">Quay đủ 1 vòng</span>
@@ -83,25 +108,25 @@
                             <% } %>
                         </span>
                     </div>
-                    <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:0.4rem;">
-                        <span style="color:var(--text-secondary);">Thời gian quay thực tế:</span>
+                    <div class="spec-row">
+                        <span class="spec-label">Thời gian quay thực tế:</span>
                         <strong><%=s.getMotorMs()%> ms</strong>
                     </div>
-                    <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:0.4rem;">
-                        <span style="color:var(--text-secondary);">Khối lượng trước khi nhả ($W_{trước}$):</span>
+                    <div class="spec-row">
+                        <span class="spec-label">Khối lượng trước khi nhả ($W_{trước}$):</span>
                         <span><%=WebUtil.formatWeight(s.getWeightBefore())%></span>
                     </div>
-                    <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:0.4rem;">
-                        <span style="color:var(--text-secondary);">Độ lệch đỉnh khi rơi ($\Delta W_{peak}$):</span>
-                        <span style="color:#f59e0b;"><%=WebUtil.formatWeight(s.getPeakDelta())%></span>
+                    <div class="spec-row">
+                        <span class="spec-label">Độ lệch đỉnh khi rơi ($\Delta W_{peak}$):</span>
+                        <span style="color:#f59e0b; font-weight:600;"><%=WebUtil.formatWeight(s.getPeakDelta())%></span>
                     </div>
-                    <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:0.4rem;">
-                        <span style="color:var(--text-secondary);">Khối lượng sau ổn định ($W_{sau}$):</span>
+                    <div class="spec-row">
+                        <span class="spec-label">Khối lượng sau ổn định ($W_{sau}$):</span>
                         <span><%=WebUtil.formatWeight(s.getWeightAfter())%></span>
                     </div>
-                    <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:0.4rem;">
-                        <span style="color:var(--text-secondary);">Độ tăng khối lượng khay ($\Delta W$):</span>
-                        <strong style="font-size:1.05rem; color:#38bdf8;">+<%=WebUtil.formatWeight(s.getWeightDelta())%></strong>
+                    <div class="spec-row">
+                        <span class="spec-label">Độ tăng khối lượng khay ($\Delta W$):</span>
+                        <strong style="font-size:1.05rem; color:#2563eb;">+<%=WebUtil.formatWeight(s.getWeightDelta())%></strong>
                     </div>
                 </div>
             </div>
@@ -109,13 +134,13 @@
             <!-- COT 2: BIEU DO DANG SONG CANVAS -->
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">📈 Đồ thị Biến thiên Khối lượng Khay (Weight Profile)</h3>
+                    <h3 class="card-title"> Đồ thị Biến thiên Khối lượng (Weight Profile)</h3>
                 </div>
                 <div class="canvas-container">
-                    <canvas id="weightWaveCanvas" width="460" height="230"></canvas>
+                    <canvas id="weightWaveCanvas" width="460" height="230" style="max-width:100%; height:auto; display:block;"></canvas>
                 </div>
                 <p style="font-size:0.78rem; color:var(--text-muted); text-align:center; margin-top:0.5rem;">
-                    Mô phỏng 3 pha: Khối lượng ban đầu ($W_{trước}$) &rarr; Đỉnh xung lực ($W_{đỉnh}$) &rarr; Trạng thái cân bằng ($W_{sau}$)
+                    Mô phỏng 3 pha: Ban đầu ($W_{trước}$) &rarr; Đỉnh xung lực ($W_{đỉnh}$) &rarr; Ổn định ($W_{sau}$)
                 </p>
             </div>
         </div>
@@ -125,7 +150,7 @@
             <!-- LICH SU NHAN -->
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">🏷️ Lịch sử Gán nhãn (Audit Trail)</h3>
+                    <h3 class="card-title"> Lịch sử Gán nhãn (Audit Trail)</h3>
                 </div>
                 <div class="table-responsive">
                     <table>
@@ -172,7 +197,7 @@
             <!-- FORM REVIEWER SUA NHAN -->
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">✍️ Hiệu chỉnh Nhãn (Dành cho Reviewer)</h3>
+                    <h3 class="card-title"> Hiệu chỉnh Nhãn (Dành cho Reviewer)</h3>
                 </div>
 
                 <% if (canReview) { %>
@@ -195,12 +220,12 @@
                         </div>
 
                         <button type="submit" class="btn btn-warning" style="width:100%;">
-                            💾 Xác nhận sửa nhãn (Lưu vào Audit Log)
+                             Xác nhận sửa nhãn (Lưu vào Audit Log)
                         </button>
                     </form>
                 <% } else { %>
                     <div class="alert alert-warning">
-                        <span>ℹ️ Chỉ người dùng có vai trò <strong>REVIEWER</strong> hoặc <strong>ADMIN</strong> mới có quyền hiệu chỉnh nhãn cho phiên này.</span>
+                        <span>ℹ Chỉ người dùng có vai trò <strong>REVIEWER</strong> hoặc <strong>ADMIN</strong> mới có quyền hiệu chỉnh nhãn cho phiên này.</span>
                     </div>
                 <% } %>
             </div>

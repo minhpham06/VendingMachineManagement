@@ -12,64 +12,74 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            padding: 1.5rem;
+            padding: 1.5rem 1rem;
+            box-sizing: border-box;
         }
         .login-card {
             width: 100%;
-            max-width: 440px;
-            background: var(--glass-bg);
-            border: var(--glass-border);
-            border-radius: 16px;
-            padding: 2.25rem;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(20px);
+            max-width: 420px;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+            box-sizing: border-box;
         }
         .login-header {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.75rem;
         }
         .login-header h1 {
-            font-size: 1.6rem;
-            background: linear-gradient(135deg, #60a5fa, #c084fc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 0.4rem;
+            font-size: 1.5rem;
+            color: var(--accent-blue);
+            margin-bottom: 0.35rem;
+            font-weight: 700;
         }
         .login-header p {
             font-size: 0.85rem;
             color: var(--text-secondary);
+            line-height: 1.4;
         }
         .quick-roles {
-            margin-top: 1.75rem;
+            margin-top: 1.5rem;
             padding-top: 1.25rem;
-            border-top: var(--glass-border);
+            border-top: 1px solid var(--border-color);
         }
         .quick-roles h4 {
             font-size: 0.78rem;
             text-transform: uppercase;
             color: var(--text-muted);
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.65rem;
             letter-spacing: 0.5px;
         }
         .role-chips {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.45rem;
+            gap: 0.4rem;
         }
         .role-chip {
-            background: rgba(255, 255, 255, 0.05);
+            background: #f1f5f9;
             border: 1px solid var(--border-color);
-            padding: 0.3rem 0.65rem;
+            padding: 0.35rem 0.6rem;
             border-radius: 6px;
             font-size: 0.75rem;
             color: var(--text-secondary);
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.15s ease;
         }
         .role-chip:hover {
-            background: rgba(59, 130, 246, 0.2);
-            color: #93c5fd;
-            border-color: rgba(59, 130, 246, 0.4);
+            background: #e0e7ff;
+            color: #1d4ed8;
+            border-color: #93c5fd;
+        }
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 1.5rem 1.15rem;
+            }
+            .login-header h1 {
+                font-size: 1.35rem;
+            }
         }
     </style>
 </head>
@@ -77,19 +87,19 @@
     <div class="login-wrapper">
         <div class="login-card">
             <div class="login-header">
-                <h1>⚡ VendDB Vending Machine</h1>
+                <h1> VendDB Vending Machine</h1>
                 <p>Hệ thống tự động phát hiện kẹt hàng qua đối chiếu lò xo & khối lượng khay</p>
             </div>
 
             <% if (request.getAttribute("errorMessage") != null) { %>
                 <div class="alert alert-danger">
-                    <span>⚠️ <%=request.getAttribute("errorMessage")%></span>
+                    <span> <%=request.getAttribute("errorMessage")%></span>
                 </div>
             <% } %>
 
             <% if (request.getAttribute("successMessage") != null) { %>
                 <div class="alert alert-success">
-                    <span>✅ <%=request.getAttribute("successMessage")%></span>
+                    <span> <%=request.getAttribute("successMessage")%></span>
                 </div>
             <% } %>
 
@@ -105,12 +115,12 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary" style="width:100%; padding:0.75rem; font-size:0.95rem; margin-top:0.5rem;">
-                    🚀 Đăng nhập hệ thống
+                     Đăng nhập hệ thống
                 </button>
             </form>
 
             <div class="quick-roles">
-                <h4>⚡ Chọn nhanh tài khoản kiểm thử (Pass: 123456):</h4>
+                <h4> Chọn nhanh tài khoản kiểm thử (Pass: 123456):</h4>
                 <div class="role-chips">
                     <button type="button" class="role-chip" onclick="fillLogin('admin')">ADMIN</button>
                     <button type="button" class="role-chip" onclick="fillLogin('catalog_manager')">CATALOG_MGR</button>

@@ -2,10 +2,13 @@ package controller;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -28,15 +31,16 @@ public class ExportServlet extends HttpServlet {
         String fileName = "vend_sessions_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".csv";
 
         resp.setContentType("text/csv; charset=UTF-8");
+        resp.setCharacterEncoding("UTF-8");
         resp.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
 
         OutputStream os = resp.getOutputStream();
-        // Ghi UTF-8 BOM de Excel mo file tieng Viet khong bi loi font
+        // Ghi UTF-8 BOM để Excel trên Windows tự động nhận diện tiếng Việt có dấu
         os.write(0xEF);
         os.write(0xBB);
         os.write(0xBF);
 
-        PrintWriter writer = new PrintWriter(os, true);
+        PrintWriter writer = new PrintWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8), true);
 
         // Header CSV
         writer.println("Session ID,Slot Code,Product Name,Nominal Weight (g),Tolerance (g),Device Seq,Coil Turns,Motor Time (ms),Weight Before (g),Weight After (g),Delta Weight (g),Peak Delta (g),Is Sample,Current Label,Label Source,Label Reason,Reviewer Name,Measured At");
@@ -54,7 +58,7 @@ public class ExportServlet extends HttpServlet {
             sb.append(s.getMotorMs()).append(",");
             sb.append(s.getWeightBefore()).append(",");
             sb.append(s.getWeightAfter()).append(",");
-            sb.append(String.format("%.2f", s.getWeightDelta())).append(",");
+            sb.append(String.format(Locale.US, "%.2f", s.getWeightDelta())).append(",");
             sb.append(s.getPeakDelta()).append(",");
             sb.append(s.isSample() ? "1" : "0").append(",");
             sb.append(escCsv(s.getCurrentLabel())).append(",");

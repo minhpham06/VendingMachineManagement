@@ -18,13 +18,13 @@
         <div class="card">
             <div class="card-header">
                 <div>
-                    <h2 class="card-title">👥 Danh sách người dùng hệ thống</h2>
+                    <h2 class="card-title"> Danh sách người dùng hệ thống</h2>
                     <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.25rem;">
                         Tổng cộng: <strong><%=request.getAttribute("totalUsers")%></strong> tài khoản
                     </p>
                 </div>
                 <a href="<%=request.getContextPath()%>/admin/user/create" class="btn btn-primary">
-                    ➕ Thêm tài khoản mới
+                     Thêm tài khoản mới
                 </a>
             </div>
 
@@ -53,7 +53,7 @@
                     <option value="1" <%="1".equals(request.getAttribute("locked")) ? "selected" : ""%>>Đã bị khóa</option>
                 </select>
 
-                <button type="submit" class="btn btn-primary">🔍 Lọc</button>
+                <button type="submit" class="btn btn-primary"> Lọc</button>
                 <a href="<%=request.getContextPath()%>/admin/users" class="btn btn-outline">Xóa lọc</a>
             </form>
 

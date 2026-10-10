@@ -19,15 +19,15 @@
         <!-- THONG TIN CA NHAN -->
         <div class="card">
             <div class="card-header">
-                <h2 class="card-title">👤 Thông tin cá nhân</h2>
+                <h2 class="card-title"> Thông tin cá nhân</h2>
                 <span class="user-badge"><%=user.getRoleCode()%></span>
             </div>
 
             <% if (request.getAttribute("infoSuccess") != null) { %>
-                <div class="alert alert-success"><span>✅ <%=request.getAttribute("infoSuccess")%></span></div>
+                <div class="alert alert-success"><span> <%=request.getAttribute("infoSuccess")%></span></div>
             <% } %>
             <% if (request.getAttribute("infoError") != null) { %>
-                <div class="alert alert-danger"><span>⚠️ <%=request.getAttribute("infoError")%></span></div>
+                <div class="alert alert-danger"><span> <%=request.getAttribute("infoError")%></span></div>
             <% } %>
 
             <form action="<%=request.getContextPath()%>/profile" method="POST">
@@ -54,7 +54,7 @@
                 </div>
 
                 <div style="text-align:right;">
-                    <button type="submit" class="btn btn-primary">💾 Cập nhật thông tin</button>
+                    <button type="submit" class="btn btn-primary"> Cập nhật thông tin</button>
                 </div>
             </form>
         </div>
@@ -62,14 +62,14 @@
         <!-- DOI MAT KHAU -->
         <div class="card">
             <div class="card-header">
-                <h2 class="card-title">🔒 Đổi mật khẩu</h2>
+                <h2 class="card-title"> Đổi mật khẩu</h2>
             </div>
 
             <% if (request.getAttribute("passSuccess") != null) { %>
-                <div class="alert alert-success"><span>✅ <%=request.getAttribute("passSuccess")%></span></div>
+                <div class="alert alert-success"><span> <%=request.getAttribute("passSuccess")%></span></div>
             <% } %>
             <% if (request.getAttribute("passError") != null) { %>
-                <div class="alert alert-danger"><span>⚠️ <%=request.getAttribute("passError")%></span></div>
+                <div class="alert alert-danger"><span> <%=request.getAttribute("passError")%></span></div>
             <% } %>
 
             <form action="<%=request.getContextPath()%>/profile" method="POST">
@@ -91,7 +91,7 @@
                 </div>
 
                 <div style="text-align:right;">
-                    <button type="submit" class="btn btn-warning">🔑 Cập nhật mật khẩu</button>
+                    <button type="submit" class="btn btn-warning"> Cập nhật mật khẩu</button>
                 </div>
             </form>
         </div>

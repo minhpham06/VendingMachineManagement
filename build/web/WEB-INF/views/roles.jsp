@@ -18,7 +18,7 @@
         <div class="card">
             <div class="card-header">
                 <div>
-                    <h2 class="card-title">🛡️ Danh sách Vai trò & Ma trận Quyền hệ thống</h2>
+                    <h2 class="card-title"> Danh sách Vai trò & Ma trận Quyền hệ thống</h2>
                     <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.25rem;">
                         5 vai trò chuẩn đề tài được kiểm soát chặt chẽ qua <code>AuthFilter</code>
                     </p>
@@ -59,7 +59,7 @@
 
             <!-- PERMISSION MATRIX -->
             <div class="card-header">
-                <h3 class="card-title" style="font-size:1.1rem;">📋 Ma trận phân quyền theo Phân hệ</h3>
+                <h3 class="card-title" style="font-size:1.1rem;"> Ma trận phân quyền theo Phân hệ</h3>
             </div>
             <div class="table-responsive">
                 <table>

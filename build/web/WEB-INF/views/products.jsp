@@ -22,26 +22,26 @@
         <div class="card">
             <div class="card-header">
                 <div>
-                    <h2 class="card-title">🍬 Quản lý Danh mục Mặt hàng</h2>
+                    <h2 class="card-title"> Quản lý Danh mục Mặt hàng</h2>
                     <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.25rem;">
                         Cấu hình Khối lượng danh định ($W_{danh\_định}$) và Dung sai ($\Delta_{dung\_sai}$) làm chuẩn đối chiếu cho máy bán hàng
                     </p>
                 </div>
                 <% if (canEdit) { %>
                     <a href="<%=request.getContextPath()%>/master/product/create" class="btn btn-primary">
-                        ➕ Thêm mặt hàng mới
+                         Thêm mặt hàng mới
                     </a>
                 <% } %>
             </div>
 
             <% if ("created".equals(request.getParameter("success"))) { %>
-                <div class="alert alert-success"><span>✅ Đã thêm mặt hàng mới thành công!</span></div>
+                <div class="alert alert-success"><span> Đã thêm mặt hàng mới thành công!</span></div>
             <% } else if ("updated".equals(request.getParameter("success"))) { %>
-                <div class="alert alert-success"><span>✅ Đã cập nhật mặt hàng thành công!</span></div>
+                <div class="alert alert-success"><span> Đã cập nhật mặt hàng thành công!</span></div>
             <% } else if ("deleted".equals(request.getParameter("success"))) { %>
-                <div class="alert alert-success"><span>✅ Đã xóa mặt hàng thành công!</span></div>
+                <div class="alert alert-success"><span> Đã xóa mặt hàng thành công!</span></div>
             <% } else if ("fk_constraint".equals(request.getParameter("error"))) { %>
-                <div class="alert alert-danger"><span>⚠️ Không thể xóa mặt hàng do đang được gán trong Rãnh máy bán hàng.</span></div>
+                <div class="alert alert-danger"><span> Không thể xóa mặt hàng do đang được gán trong Rãnh máy bán hàng.</span></div>
             <% } %>
 
             <div class="table-responsive">

@@ -79,7 +79,7 @@
         <div class="charts-grid">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">🍩 Cơ cấu phân loại lượt nhả</h3>
+                    <h3 class="card-title"> Cơ cấu phân loại lượt nhả</h3>
                 </div>
                 <div class="canvas-container">
                     <canvas id="donutChart" width="360" height="240"></canvas>
@@ -88,7 +88,7 @@
 
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">📊 Tỷ lệ kẹt theo mặt hàng (%)</h3>
+                    <h3 class="card-title"> Tỷ lệ kẹt theo mặt hàng (%)</h3>
                 </div>
                 <div class="canvas-container">
                     <canvas id="barChart" width="380" height="240"></canvas>
@@ -99,7 +99,7 @@
         <!-- PRODUCT STATS TABLE -->
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">📦 Thống kê chi tiết theo Mặt hàng & Rãnh</h3>
+                <h3 class="card-title"> Thống kê chi tiết theo Mặt hàng & Rãnh</h3>
             </div>
             <div class="table-responsive">
                 <table>

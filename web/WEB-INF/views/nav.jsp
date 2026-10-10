@@ -3,8 +3,12 @@
 <%
     AppUser navUser = (AppUser) session.getAttribute("user");
     String navRole = (navUser != null) ? navUser.getRoleCode() : "";
-    String currentPath = request.getServletPath();
-    if (currentPath == null) currentPath = "";
+    
+    String forwardPath = (String) request.getAttribute("javax.servlet.forward.servlet_path");
+    String forwardUri = (String) request.getAttribute("javax.servlet.forward.request_uri");
+    String reqUri = request.getRequestURI();
+    String servletPath = request.getServletPath();
+    String fullPath = (" " + forwardPath + " " + forwardUri + " " + reqUri + " " + servletPath).toLowerCase();
 %>
 <nav class="navbar">
     <div class="nav-header">
@@ -16,28 +20,28 @@
     
     <div class="nav-collapse" id="nav-collapse">
         <div class="nav-menu">
-            <a href="<%=request.getContextPath()%>/dashboard" class="nav-item <%="/dashboard".equals(currentPath) ? "active" : ""%>">Tổng quan</a>
-            <a href="<%=request.getContextPath()%>/sessions" class="nav-item <%="/sessions".equals(currentPath) || "/session/detail".equals(currentPath) ? "active" : ""%>">Phiên đo</a>
-            <a href="<%=request.getContextPath()%>/alerts" class="nav-item <%="/alerts".equals(currentPath) ? "active" : ""%>">Cảnh báo</a>
+            <a href="<%=request.getContextPath()%>/dashboard" class="nav-item <%=fullPath.contains("dashboard") ? "active" : ""%>">Tổng quan</a>
+            <a href="<%=request.getContextPath()%>/sessions" class="nav-item <%=fullPath.contains("session") ? "active" : ""%>">Phiên đo</a>
+            <a href="<%=request.getContextPath()%>/alerts" class="nav-item <%=fullPath.contains("alert") ? "active" : ""%>">Cảnh báo</a>
 
             <% if ("ADMIN".equals(navRole) || "CATALOG_MANAGER".equals(navRole)) { %>
-                <a href="<%=request.getContextPath()%>/master/products" class="nav-item <%="/master/products".equals(currentPath) || "/master/product/create".equals(currentPath) || "/master/product/edit".equals(currentPath) ? "active" : ""%>">Mặt hàng</a>
+                <a href="<%=request.getContextPath()%>/master/products" class="nav-item <%=fullPath.contains("product") ? "active" : ""%>">Mặt hàng</a>
             <% } %>
 
             <% if ("ADMIN".equals(navRole) || "CATALOG_MANAGER".equals(navRole) || "OPERATOR".equals(navRole)) { %>
-                <a href="<%=request.getContextPath()%>/master/slots" class="nav-item <%="/master/slots".equals(currentPath) || "/master/slot/edit".equals(currentPath) ? "active" : ""%>">Rãnh chứa</a>
+                <a href="<%=request.getContextPath()%>/master/slots" class="nav-item <%=fullPath.contains("slot") ? "active" : ""%>">Rãnh chứa</a>
             <% } %>
 
             <% if ("ADMIN".equals(navRole) || "OPERATOR".equals(navRole)) { %>
-                <a href="<%=request.getContextPath()%>/master/restocks" class="nav-item <%="/master/restocks".equals(currentPath) || "/master/restock/create".equals(currentPath) ? "active" : ""%>">Nạp hàng</a>
+                <a href="<%=request.getContextPath()%>/master/restocks" class="nav-item <%=fullPath.contains("restock") ? "active" : ""%>">Nạp hàng</a>
             <% } %>
 
             <% if ("ADMIN".equals(navRole)) { %>
-                <a href="<%=request.getContextPath()%>/admin/users" class="nav-item <%="/admin/users".equals(currentPath) || "/admin/user/create".equals(currentPath) || "/admin/user/edit".equals(currentPath) ? "active" : ""%>">Tài khoản</a>
-                <a href="<%=request.getContextPath()%>/admin/roles" class="nav-item <%="/admin/roles".equals(currentPath) ? "active" : ""%>">Phân quyền</a>
+                <a href="<%=request.getContextPath()%>/admin/users" class="nav-item <%=fullPath.contains("/admin/user") || fullPath.contains("user_form") || fullPath.contains("/users") ? "active" : ""%>">Tài khoản</a>
+                <a href="<%=request.getContextPath()%>/admin/roles" class="nav-item <%=fullPath.contains("role") ? "active" : ""%>">Phân quyền</a>
             <% } %>
 
-            <a href="<%=request.getContextPath()%>/export" class="nav-item <%="/export".equals(currentPath) ? "active" : ""%>">Xuất CSV</a>
+            <a href="<%=request.getContextPath()%>/export" class="nav-item <%=fullPath.contains("export") ? "active" : ""%>">Xuất CSV</a>
         </div>
 
         <div class="nav-right">

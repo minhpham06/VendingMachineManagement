@@ -23,7 +23,7 @@
         <div class="card">
             <div class="card-header">
                 <div>
-                    <h2 class="card-title">📦 Quản lý Rãnh chứa & Lò xo</h2>
+                    <h2 class="card-title"> Quản lý Rãnh chứa & Lò xo</h2>
                     <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.25rem;">
                         Theo dõi lượng tồn kho từng rãnh, sản phẩm gán vào và trạng thái tự khóa (SUSPENDED) khi phát hiện kẹt hàng liên tiếp
                     </p>
@@ -31,9 +31,9 @@
             </div>
 
             <% if ("updated".equals(request.getParameter("success"))) { %>
-                <div class="alert alert-success"><span>✅ Đã cập nhật cấu hình rãnh thành công!</span></div>
+                <div class="alert alert-success"><span> Đã cập nhật cấu hình rãnh thành công!</span></div>
             <% } else if ("toggled".equals(request.getParameter("success"))) { %>
-                <div class="alert alert-success"><span>✅ Đã chuyển đổi trạng thái rãnh thành công!</span></div>
+                <div class="alert alert-success"><span> Đã chuyển đổi trạng thái rãnh thành công!</span></div>
             <% } %>
 
             <div class="table-responsive">

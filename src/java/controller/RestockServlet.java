@@ -89,6 +89,18 @@ public class RestockServlet extends HttpServlet {
             return;
         }
 
+        // Kiểm tra rãnh có đang bị khóa / tạm dừng không
+        if (slot.isSuspended() || !slot.isActive()) {
+            req.setAttribute("errorMessage", "Không thể nạp hàng! Rãnh " + slot.getCode() + 
+                             " hiện đang bị KHÓA (Tạm dừng hoạt động). Vui lòng mở khóa rãnh trước khi thực hiện nạp hàng.");
+            req.setAttribute("slots", slotDAO.getAllSlots());
+            req.setAttribute("selectedSlotId", slotId);
+            req.setAttribute("selectedQuantity", quantity);
+            req.setAttribute("selectedNote", note);
+            req.getRequestDispatcher("/WEB-INF/views/restock_form.jsp").forward(req, resp);
+            return;
+        }
+
         // Kiểm tra nạp vượt quá sức chứa tối đa của rãnh
         int maxCanAdd = slot.getCapacity() - slot.getCurrentStock();
         if (slot.getCurrentStock() + quantity > slot.getCapacity()) {
