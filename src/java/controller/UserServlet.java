@@ -122,7 +122,7 @@ public class UserServlet extends HttpServlet {
             || password == null || password.isEmpty()
             || fullName == null || fullName.trim().isEmpty()
             || roleId <= 0) {
-            req.setAttribute("errorMessage", "Vui lòng nhập đầy đủ các trường bắt buộc.");
+            req.setAttribute("errorMessage", "Please fill in all required fields.");
             req.setAttribute("roles", roleDAO.getAllRoles());
             req.getRequestDispatcher("/WEB-INF/views/user_form.jsp").forward(req, resp);
             return;
@@ -130,7 +130,7 @@ public class UserServlet extends HttpServlet {
 
         username = username.trim().toLowerCase();
         if (userDAO.findByUsername(username) != null) {
-            req.setAttribute("errorMessage", "Tên đăng nhập '" + username + "' đã tồn tại trong hệ thống.");
+            req.setAttribute("errorMessage", "Username '" + username + "' already exists in the system.");
             req.setAttribute("roles", roleDAO.getAllRoles());
             req.getRequestDispatcher("/WEB-INF/views/user_form.jsp").forward(req, resp);
             return;
@@ -149,7 +149,7 @@ public class UserServlet extends HttpServlet {
         if (newId > 0) {
             resp.sendRedirect(req.getContextPath() + "/admin/users?success=created");
         } else {
-            req.setAttribute("errorMessage", "Không thể tạo tài khoản do lỗi cơ sở dữ liệu.");
+            req.setAttribute("errorMessage", "Cannot create user account due to a database error.");
             req.setAttribute("roles", roleDAO.getAllRoles());
             req.getRequestDispatcher("/WEB-INF/views/user_form.jsp").forward(req, resp);
         }
@@ -184,7 +184,7 @@ public class UserServlet extends HttpServlet {
         boolean locked = "1".equals(req.getParameter("isLocked"));
 
         if (fullName == null || fullName.trim().isEmpty() || roleId <= 0) {
-            req.setAttribute("errorMessage", "Họ tên và Vai trò không được để trống.");
+            req.setAttribute("errorMessage", "Full Name and Role cannot be empty.");
             req.setAttribute("editUser", u);
             req.setAttribute("roles", roleDAO.getAllRoles());
             req.getRequestDispatcher("/WEB-INF/views/user_form.jsp").forward(req, resp);
@@ -200,7 +200,7 @@ public class UserServlet extends HttpServlet {
         if (userDAO.update(u)) {
             resp.sendRedirect(req.getContextPath() + "/admin/users?success=updated");
         } else {
-            req.setAttribute("errorMessage", "Lỗi cập nhật người dùng.");
+            req.setAttribute("errorMessage", "Error updating user.");
             req.setAttribute("editUser", u);
             req.setAttribute("roles", roleDAO.getAllRoles());
             req.getRequestDispatcher("/WEB-INF/views/user_form.jsp").forward(req, resp);

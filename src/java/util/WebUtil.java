@@ -52,7 +52,7 @@ public class WebUtil {
     }
 
     public static String formatCurrency(double amount) {
-        return CURRENCY_FMT.format(amount) + " đ";
+        return CURRENCY_FMT.format(amount) + " VND";
     }
 
     public static String formatWeight(double weight) {

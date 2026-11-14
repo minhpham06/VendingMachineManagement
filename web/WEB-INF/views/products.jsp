@@ -1,4 +1,4 @@
-﻿<%@page import="java.util.List"%>
+<%@page import="java.util.List"%>
 <%@page import="model.VendProduct"%>
 <%@page import="model.AppUser"%>
 <%@page import="util.WebUtil"%>
@@ -8,11 +8,11 @@
     boolean canEdit = (me != null && ("ADMIN".equals(me.getRoleCode()) || "CATALOG_MANAGER".equals(me.getRoleCode())));
 %>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-    <title>Danh mục mặt hàng - VendDB</title>
+    <title>Product Catalog - VendDB</title>
     <link rel="stylesheet" href="<%=request.getContextPath()%>/css/style.css">
 </head>
 <body>
@@ -22,40 +22,40 @@
         <div class="card">
             <div class="card-header">
                 <div>
-                    <h2 class="card-title"> Quản lý Danh mục Mặt hàng</h2>
+                    <h2 class="card-title"> Product Catalog Management</h2>
                     <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.25rem;">
-                        Cấu hình Khối lượng danh định ($W_{danh\_định}$) và Dung sai ($\Delta_{dung\_sai}$) làm chuẩn đối chiếu cho máy bán hàng
+                        Configure Nominal Weight ($W_{nominal}$) and Tolerance ($\pm\Delta$) as standard verification baselines
                     </p>
                 </div>
                 <% if (canEdit) { %>
                     <a href="<%=request.getContextPath()%>/master/product/create" class="btn btn-primary">
-                         Thêm mặt hàng mới
+                         Add New Product
                     </a>
                 <% } %>
             </div>
 
             <% if ("created".equals(request.getParameter("success"))) { %>
-                <div class="alert alert-success"><span> Đã thêm mặt hàng mới thành công!</span></div>
+                <div class="alert alert-success"><span> Product created successfully!</span></div>
             <% } else if ("updated".equals(request.getParameter("success"))) { %>
-                <div class="alert alert-success"><span> Đã cập nhật mặt hàng thành công!</span></div>
+                <div class="alert alert-success"><span> Product updated successfully!</span></div>
             <% } else if ("deleted".equals(request.getParameter("success"))) { %>
-                <div class="alert alert-success"><span> Đã xóa mặt hàng thành công!</span></div>
+                <div class="alert alert-success"><span> Product deleted successfully!</span></div>
             <% } else if ("fk_constraint".equals(request.getParameter("error"))) { %>
-                <div class="alert alert-danger"><span> Không thể xóa mặt hàng do đang được gán trong Rãnh máy bán hàng.</span></div>
+                <div class="alert alert-danger"><span> Cannot delete product because it is currently assigned to a slot.</span></div>
             <% } %>
 
             <div class="table-responsive">
                 <table>
                     <thead>
                         <tr>
-                            <th>Mã SP</th>
-                            <th>Tên mặt hàng</th>
-                            <th>Khối lượng chuẩn ($W_{chuẩn}$)</th>
-                            <th>Dung sai ($\pm\Delta$)</th>
-                            <th>Đơn giá</th>
-                            <th>Trạng thái</th>
-                            <th>Ngày tạo</th>
-                            <% if (canEdit) { %><th style="text-align:center;">Thao tác</th><% } %>
+                            <th>Code</th>
+                            <th>Product Name</th>
+                            <th>Nominal Weight ($W_{nominal}$)</th>
+                            <th>Tolerance ($\pm\Delta$)</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Created At</th>
+                            <% if (canEdit) { %><th style="text-align:center;">Action</th><% } %>
                         </tr>
                     </thead>
                     <tbody>
@@ -72,17 +72,17 @@
                             <td><%=WebUtil.formatCurrency(p.getPrice())%></td>
                             <td>
                                 <% if (p.isActive()) { %>
-                                    <span class="badge badge-success">Đang kinh doanh</span>
+                                    <span class="badge badge-success">Active</span>
                                 <% } else { %>
-                                    <span class="badge badge-danger">Tạm ngưng</span>
+                                    <span class="badge badge-danger">Inactive</span>
                                 <% } %>
                             </td>
                             <td><%=WebUtil.formatDateTime(p.getCreatedAt())%></td>
                             <% if (canEdit) { %>
                             <td style="text-align:center;">
                                 <div style="display:inline-flex; gap:0.4rem;">
-                                    <a href="<%=request.getContextPath()%>/master/product/edit?id=<%=p.getProductId()%>" class="btn btn-outline btn-sm">Sửa</a>
-                                    <a href="<%=request.getContextPath()%>/master/product/delete?id=<%=p.getProductId()%>" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn xóa mặt hàng này?');">Xóa</a>
+                                    <a href="<%=request.getContextPath()%>/master/product/edit?id=<%=p.getProductId()%>" class="btn btn-outline btn-sm">Edit</a>
+                                    <a href="<%=request.getContextPath()%>/master/product/delete?id=<%=p.getProductId()%>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this product?');">Delete</a>
                                 </div>
                             </td>
                             <% } %>
@@ -92,7 +92,7 @@
                             } else {
                         %>
                         <tr>
-                            <td colspan="8" style="text-align:center; color:var(--text-muted);">Chưa có mặt hàng nào trong hệ thống.</td>
+                            <td colspan="8" style="text-align:center; color:var(--text-muted);">No products found in the catalog.</td>
                         </tr>
                         <% } %>
                     </tbody>

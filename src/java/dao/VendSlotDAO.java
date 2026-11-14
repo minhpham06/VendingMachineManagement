@@ -12,21 +12,34 @@ import util.DBContext;
 public class VendSlotDAO {
 
     private static final String SELECT_BASE =
-        "SELECT s.slot_id, s.code, s.name, s.product_id, " +
+        "SELECT s.slot_id, s.device_id, d.machine_name, s.code, s.name, s.product_id, " +
         "p.name AS product_name, p.nominal_weight, p.tolerance, p.price, " +
         "s.capacity, s.current_stock, s.is_suspended, s.note, s.is_active, s.created_at " +
         "FROM Vend_Slot s " +
+        "LEFT JOIN Device d ON s.device_id = d.device_id " +
         "LEFT JOIN Vend_Product p ON s.product_id = p.product_id ";
 
     public List<VendSlot> getAllSlots() {
+        return getSlotsByDevice(null);
+    }
+
+    public List<VendSlot> getSlotsByDevice(Integer deviceId) {
         List<VendSlot> list = new ArrayList<VendSlot>();
-        String sql = SELECT_BASE + "ORDER BY s.slot_id ASC";
+        StringBuilder sql = new StringBuilder(SELECT_BASE);
+        if (deviceId != null && deviceId > 0) {
+            sql.append("WHERE s.device_id = ? ");
+        }
+        sql.append("ORDER BY s.device_id ASC, s.slot_id ASC");
+
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
             conn = DBContext.getConnection();
-            ps = conn.prepareStatement(sql);
+            ps = conn.prepareStatement(sql.toString());
+            if (deviceId != null && deviceId > 0) {
+                ps.setInt(1, deviceId);
+            }
             rs = ps.executeQuery();
             while (rs.next()) {
                 list.add(mapSlot(rs));
@@ -106,15 +119,18 @@ public class VendSlotDAO {
         }
     }
 
-    public boolean updateStock(int slotId, int deltaQty) {
-        String sql = "UPDATE Vend_Slot SET current_stock = CASE WHEN (current_stock + ?) < 0 THEN 0 ELSE (current_stock + ?) END WHERE slot_id = ?";
+    public boolean restock(int slotId, int addQuantity) {
+        String sql = "UPDATE Vend_Slot SET current_stock = CASE " +
+                     "WHEN current_stock + ? > capacity THEN capacity " +
+                     "ELSE current_stock + ? END " +
+                     "WHERE slot_id = ?";
         Connection conn = null;
         PreparedStatement ps = null;
         try {
             conn = DBContext.getConnection();
             ps = conn.prepareStatement(sql);
-            ps.setInt(1, deltaQty);
-            ps.setInt(2, deltaQty);
+            ps.setInt(1, addQuantity);
+            ps.setInt(2, addQuantity);
             ps.setInt(3, slotId);
             return ps.executeUpdate() > 0;
         } catch (SQLException ex) {
@@ -143,9 +159,41 @@ public class VendSlotDAO {
         }
     }
 
+    public boolean updateStock(int slotId, int delta) {
+        String sql = "UPDATE Vend_Slot SET current_stock = CASE " +
+                     "WHEN current_stock + ? < 0 THEN 0 " +
+                     "WHEN current_stock + ? > capacity THEN capacity " +
+                     "ELSE current_stock + ? END " +
+                     "WHERE slot_id = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = DBContext.getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, delta);
+            ps.setInt(2, delta);
+            ps.setInt(3, delta);
+            ps.setInt(4, slotId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        } finally {
+            DBContext.close(null, ps, conn);
+        }
+    }
+
     private VendSlot mapSlot(ResultSet rs) throws SQLException {
         VendSlot s = new VendSlot();
         s.setSlotId(rs.getInt("slot_id"));
+        try {
+            int dId = rs.getInt("device_id");
+            if (!rs.wasNull()) {
+                s.setDeviceId(dId);
+            }
+            s.setMachineName(rs.getString("machine_name"));
+        } catch (SQLException ignored) {
+        }
         s.setCode(rs.getString("code"));
         s.setName(rs.getString("name"));
         int pId = rs.getInt("product_id");

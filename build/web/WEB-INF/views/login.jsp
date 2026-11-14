@@ -1,10 +1,10 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng nhập hệ thống - VendDB</title>
+    <title>System Login - VendDB</title>
     <link rel="stylesheet" href="<%=request.getContextPath()%>/css/style.css">
     <style>
         .login-wrapper {
@@ -88,7 +88,7 @@
         <div class="login-card">
             <div class="login-header">
                 <h1> VendDB Vending Machine</h1>
-                <p>Hệ thống tự động phát hiện kẹt hàng qua đối chiếu lò xo & khối lượng khay</p>
+                <p>Automatic jam detection system via spring rotation & tray weight verification</p>
             </div>
 
             <% if (request.getAttribute("errorMessage") != null) { %>
@@ -105,22 +105,22 @@
 
             <form action="<%=request.getContextPath()%>/login" method="POST">
                 <div class="form-group">
-                    <label for="username">Tên đăng nhập</label>
-                    <input type="text" id="username" name="username" value="<%=request.getAttribute("username") != null ? request.getAttribute("username") : ""%>" placeholder="Nhập username..." required autofocus>
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" value="<%=request.getAttribute("username") != null ? request.getAttribute("username") : ""%>" placeholder="Enter username..." required autofocus>
                 </div>
 
                 <div class="form-group">
-                    <label for="password">Mật khẩu</label>
-                    <input type="password" id="password" name="password" placeholder="Nhập mật khẩu..." required>
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter password..." required>
                 </div>
 
                 <button type="submit" class="btn btn-primary" style="width:100%; padding:0.75rem; font-size:0.95rem; margin-top:0.5rem;">
-                     Đăng nhập hệ thống
+                     Sign In
                 </button>
             </form>
 
             <div class="quick-roles">
-                <h4> Chọn nhanh tài khoản kiểm thử (Pass: 123456):</h4>
+                <h4> Quick Test Accounts (Password: 123456):</h4>
                 <div class="role-chips">
                     <button type="button" class="role-chip" onclick="fillLogin('admin')">ADMIN</button>
                     <button type="button" class="role-chip" onclick="fillLogin('catalog_manager')">CATALOG_MGR</button>
@@ -128,6 +128,12 @@
                     <button type="button" class="role-chip" onclick="fillLogin('reviewer')">REVIEWER</button>
                     <button type="button" class="role-chip" onclick="fillLogin('viewer')">VIEWER</button>
                 </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 1.25rem;">
+                <a href="<%=request.getContextPath()%>/" style="font-size: 0.85rem; color: var(--text-secondary); text-decoration: none;">
+                    Return to Store
+                </a>
             </div>
         </div>
     </div>

@@ -1,13 +1,13 @@
-﻿<%@page import="java.util.List"%>
+<%@page import="java.util.List"%>
 <%@page import="java.util.Map"%>
 <%@page import="util.WebUtil"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-    <title>Tổng quan hệ thống - VendDB</title>
+    <title>System Dashboard - VendDB</title>
     <link rel="stylesheet" href="<%=request.getContextPath()%>/css/style.css">
     <style>
         .charts-grid {
@@ -50,27 +50,27 @@
 
         <div class="stats-grid">
             <div class="stat-card">
-                <span class="stat-label">Tổng lượt nhả hàng</span>
+                <span class="stat-label">Total Dispense Sessions</span>
                 <span class="stat-val"><%=totalSessions%></span>
             </div>
             <div class="stat-card success">
-                <span class="stat-label">Thành công (SUCCESS)</span>
+                <span class="stat-label">Successful (SUCCESS)</span>
                 <span class="stat-val"><%=successCnt%> <small style="font-size:0.9rem; color:var(--success);">(<%=String.format("%.1f", successRate)%>%)</small></span>
             </div>
             <div class="stat-card danger">
-                <span class="stat-label">Kẹt hàng (JAM)</span>
+                <span class="stat-label">Item Jam (JAM)</span>
                 <span class="stat-val"><%=jamCnt%></span>
             </div>
             <div class="stat-card warning">
-                <span class="stat-label">Rơi 2 món / Sai (WRONG)</span>
+                <span class="stat-label">Double / Wrong Item (WRONG)</span>
                 <span class="stat-val"><%=wrongCnt%></span>
             </div>
             <div class="stat-card purple">
-                <span class="stat-label">Lỗi động cơ (MOTOR_FAIL)</span>
+                <span class="stat-label">Motor Failure (MOTOR_FAIL)</span>
                 <span class="stat-val"><%=motorCnt%></span>
             </div>
             <div class="stat-card <%=(totalAlerts > 0 ? "danger" : "")%>">
-                <span class="stat-label">Cảnh báo chưa xử lý</span>
+                <span class="stat-label">Unresolved Alerts</span>
                 <span class="stat-val"><%=totalAlerts%></span>
             </div>
         </div>
@@ -79,7 +79,7 @@
         <div class="charts-grid">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title"> Cơ cấu phân loại lượt nhả</h3>
+                    <h3 class="card-title"> Dispense Outcome Distribution</h3>
                 </div>
                 <div class="canvas-container">
                     <canvas id="donutChart" width="360" height="240"></canvas>
@@ -88,7 +88,7 @@
 
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title"> Tỷ lệ kẹt theo mặt hàng (%)</h3>
+                    <h3 class="card-title"> Jam Rate by Product (%)</h3>
                 </div>
                 <div class="canvas-container">
                     <canvas id="barChart" width="380" height="240"></canvas>
@@ -99,18 +99,18 @@
         <!-- PRODUCT STATS TABLE -->
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title"> Thống kê chi tiết theo Mặt hàng & Rãnh</h3>
+                <h3 class="card-title"> Detailed Statistics by Product & Slot</h3>
             </div>
             <div class="table-responsive">
                 <table>
                     <thead>
                         <tr>
-                            <th>Mặt hàng</th>
-                            <th>Tổng lượt chạy</th>
-                            <th>Thành công</th>
-                            <th>Kẹt hàng (JAM)</th>
-                            <th>Tỷ lệ kẹt</th>
-                            <th>Đánh giá rủi ro</th>
+                            <th>Product</th>
+                            <th>Total Runs</th>
+                            <th>Success</th>
+                            <th>Item Jam (JAM)</th>
+                            <th>Jam Rate</th>
+                            <th>Risk Assessment</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -128,20 +128,20 @@
                             <td><strong><%=String.format("%.1f", rate)%>%</strong></td>
                             <td>
                                 <% if (rate > 20.0) { %>
-                                    <span class="badge badge-danger">Rủi ro cao (Cần chỉnh lò xo)</span>
+                                    <span class="badge badge-danger">High Risk (Adjust Spring)</span>
                                 <% } else if (rate > 10.0) { %>
-                                    <span class="badge badge-warning">Cảnh báo trung bình</span>
+                                    <span class="badge badge-warning">Medium Warning</span>
                                 <% } else { %>
-                                    <span class="badge badge-success">Ổn định</span>
+                                    <span class="badge badge-success">Stable</span>
                                 <% } %>
                             </td>
                         </tr>
                         <%
-                                }
+                                 }
                             } else {
                         %>
                         <tr>
-                            <td colspan="6" style="text-align:center; color:var(--text-muted);">Chưa có dữ liệu thống kê mặt hàng.</td>
+                            <td colspan="6" style="text-align:center; color:var(--text-muted);">No product statistics available.</td>
                         </tr>
                         <% } %>
                     </tbody>
@@ -151,7 +151,7 @@
     </div>
 
     <footer>
-        Dự án PRJ301 - Đề số 01: Máy bán hàng tự động phát hiện kẹt hàng &copy; Fall 2026
+        PRJ301 Project - Smart Vending Machine with Jam Detection &copy; Fall 2026
     </footer>
 
     <!-- SCRIPT VE BIEU DO CANVAS THUAN (KHONG DUNG THU VIEN NGOAI) -->
@@ -189,7 +189,7 @@
             data.forEach(item => {
                 ctx.fillStyle = item.color;
                 ctx.fillRect(240, legendY, 12, 12);
-                ctx.fillStyle = '#f8fafc';
+                ctx.fillStyle = '#1e293b';
                 ctx.font = '12px Segoe UI';
                 const pct = total > 0 ? ((item.val/total)*100).toFixed(1) : 0;
                 ctx.fillText(item.label + ': ' + item.val + ' (' + pct + '%)', 260, legendY + 10);
@@ -222,7 +222,7 @@
             const maxVal = 40; // Max 40%
 
             // Axes
-            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+            ctx.strokeStyle = '#cbd5e1';
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(paddingLeft, 20);
@@ -231,7 +231,7 @@
             ctx.stroke();
 
             // Y-axis labels
-            ctx.fillStyle = '#94a3b8';
+            ctx.fillStyle = '#64748b';
             ctx.font = '10px Segoe UI';
             ctx.fillText('40%', 10, 25);
             ctx.fillText('20%', 10, 20 + chartH/2);
@@ -255,7 +255,7 @@
                 ctx.fillRect(x, y, barW, h);
 
                 // Label rate on top
-                ctx.fillStyle = '#f8fafc';
+                ctx.fillStyle = '#1e293b';
                 ctx.font = 'bold 11px Segoe UI';
                 ctx.fillText(rate + '%', x + 8, y - 5);
 

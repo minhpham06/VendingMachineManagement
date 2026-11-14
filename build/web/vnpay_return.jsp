@@ -5,15 +5,16 @@
 <%@page import="java.util.Map"%>
 <%@page import="util.VNPayConfig"%>
 <%@page import="util.WebUtil"%>
+<%@page import="util.DispenseManager"%>
 <%@page import="dao.VendSlotDAO"%>
 <%@page import="model.VendSlot"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kết quả thanh toán VNPay - VendDB</title>
+    <title>VNPay Payment Result - VendDB</title>
     <link rel="stylesheet" href="<%=request.getContextPath()%>/css/style.css">
     <style>
         .return-card {
@@ -95,31 +96,30 @@
     String vnp_ResponseCode = request.getParameter("vnp_ResponseCode");
     boolean isSuccess = checkSignature && "00".equals(vnp_TransactionStatus);
 
-    if (isSuccess) {
-        String pendingSlotCode = (String) session.getAttribute("pendingSlotCode");
-        String pendingQtyStr = (String) session.getAttribute("pendingQty");
-        if (pendingSlotCode != null && pendingQtyStr != null) {
-            try {
-                int qtyToDeduct = Integer.parseInt(pendingQtyStr);
-                VendSlotDAO slotDAO = new VendSlotDAO();
-                VendSlot slot = slotDAO.findByCode(pendingSlotCode);
-                if (slot != null) {
-                    slotDAO.updateStock(slot.getSlotId(), -qtyToDeduct);
-                }
-            } catch (Exception e) {
-                // Ignore parsing errors
-            }
-            session.removeAttribute("pendingSlotCode");
-            session.removeAttribute("pendingQty");
-        }
-    }
-
     String vnp_TxnRef = request.getParameter("vnp_TxnRef");
     String vnp_Amount = request.getParameter("vnp_Amount");
     String vnp_OrderInfo = request.getParameter("vnp_OrderInfo");
     String vnp_TransactionNo = request.getParameter("vnp_TransactionNo");
     String vnp_BankCode = request.getParameter("vnp_BankCode");
     String vnp_PayDate = request.getParameter("vnp_PayDate");
+
+    if (isSuccess) {
+        String pendingSlotCode = (String) session.getAttribute("pendingSlotCode");
+        String pendingQtyStr = (String) session.getAttribute("pendingQty");
+        if (pendingSlotCode != null && pendingQtyStr != null) {
+            int turns = 1;
+            try {
+                turns = Integer.parseInt(pendingQtyStr);
+            } catch (Exception ignored) {}
+            // Đẩy lệnh nhả hàng vào hàng đợi để ESP32 nhận và kích hoạt động cơ.
+            // Việc trừ tồn kho (updateStock) sẽ do IngestServlet thực hiện sau khi ESP32
+            // nhả hàng thành công và cảm biến xác nhận (tránh trừ trùng 2 lần).
+            DispenseManager.addCommand(vnp_TxnRef, pendingSlotCode, turns);
+
+            session.removeAttribute("pendingSlotCode");
+            session.removeAttribute("pendingQty");
+        }
+    }
 
     long displayAmount = 0;
     if (vnp_Amount != null) {
@@ -133,50 +133,50 @@
         <div class="return-card">
             <div class="return-header">
                 <% if (isSuccess) { %>
-                    <span class="status-badge status-success">Thanh toán Thành công</span>
-                    <h2 style="font-size: 1.5rem; color: #166534; margin: 0.25rem 0;">Giao dịch hoàn tất</h2>
-                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Cảm ơn bạn đã mua hàng tại Máy bán hàng tự động</p>
+                    <span class="status-badge status-success">Payment Successful</span>
+                    <h2 style="font-size: 1.5rem; color: #166534; margin: 0.25rem 0;">Transaction Completed</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">The vending machine is dispensing your product...</p>
                 <% } else if (!checkSignature) { %>
-                    <span class="status-badge status-failed">Lỗi Chữ Ký</span>
-                    <h2 style="font-size: 1.5rem; color: #991b1b; margin: 0.25rem 0;">Xác thực không hợp lệ</h2>
-                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Chữ ký trả về không khớp với mã bảo mật (invalid signature)</p>
+                    <span class="status-badge status-failed">Invalid Signature</span>
+                    <h2 style="font-size: 1.5rem; color: #991b1b; margin: 0.25rem 0;">Verification Failed</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">The returned signature does not match the secure hash (invalid signature)</p>
                 <% } else { %>
-                    <span class="status-badge status-failed">Giao dịch Thất bại</span>
-                    <h2 style="font-size: 1.5rem; color: #991b1b; margin: 0.25rem 0;">Thanh toán không thành công</h2>
-                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Giao dịch đã bị hủy hoặc có lỗi (Mã trạng thái: <%=vnp_TransactionStatus != null ? vnp_TransactionStatus : vnp_ResponseCode%>)</p>
+                    <span class="status-badge status-failed">Transaction Failed</span>
+                    <h2 style="font-size: 1.5rem; color: #991b1b; margin: 0.25rem 0;">Payment Unsuccessful</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">The transaction was cancelled or encountered an error (Status code: <%=vnp_TransactionStatus != null ? vnp_TransactionStatus : vnp_ResponseCode%>)</p>
                 <% } %>
             </div>
 
             <div>
                 <div class="detail-row">
-                    <span class="detail-label">Mã đơn hàng (TxnRef):</span>
+                    <span class="detail-label">Order Reference (TxnRef):</span>
                     <span class="detail-value"><%=vnp_TxnRef != null ? WebUtil.esc(vnp_TxnRef) : "N/A"%></span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label">Số tiền thanh toán:</span>
+                    <span class="detail-label">Payment Amount:</span>
                     <span class="detail-value" style="color: var(--accent-blue); font-size: 1.1rem;">
                         <%=WebUtil.formatCurrency(displayAmount)%>
                     </span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label">Nội dung thanh toán:</span>
+                    <span class="detail-label">Order Info:</span>
                     <span class="detail-value"><%=vnp_OrderInfo != null ? WebUtil.esc(vnp_OrderInfo) : "N/A"%></span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label">Mã giao dịch VNPay:</span>
+                    <span class="detail-label">VNPay Transaction No:</span>
                     <span class="detail-value"><%=vnp_TransactionNo != null ? WebUtil.esc(vnp_TransactionNo) : "N/A"%></span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label">Ngân hàng thanh toán:</span>
+                    <span class="detail-label">Payment Bank:</span>
                     <span class="detail-value"><%=vnp_BankCode != null ? WebUtil.esc(vnp_BankCode) : "N/A"%></span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label">Mã phản hồi (Response Code):</span>
+                    <span class="detail-label">Response Code:</span>
                     <span class="detail-value"><%=vnp_ResponseCode != null ? WebUtil.esc(vnp_ResponseCode) : "N/A"%></span>
                 </div>
                 <% if (vnp_PayDate != null && vnp_PayDate.length() == 14) { %>
                 <div class="detail-row">
-                    <span class="detail-label">Thời gian thanh toán:</span>
+                    <span class="detail-label">Payment Time:</span>
                     <span class="detail-value">
                         <%=vnp_PayDate.substring(6, 8) + "/" + vnp_PayDate.substring(4, 6) + "/" + vnp_PayDate.substring(0, 4) + " " + vnp_PayDate.substring(8, 10) + ":" + vnp_PayDate.substring(10, 12) + ":" + vnp_PayDate.substring(12, 14)%>
                     </span>
@@ -186,7 +186,7 @@
 
             <div style="padding: 1.5rem; text-align: center; background: #f8fafc; border-top: 1px solid var(--border-color);">
                 <a href="<%=request.getContextPath()%>/index.jsp" class="btn btn-primary" style="display: inline-block; width: 100%;">
-                    Quay về Trang chủ Mua hàng
+                    Return to Vending Store
                 </a>
             </div>
         </div>

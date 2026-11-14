@@ -4,11 +4,11 @@
 <%@page import="util.WebUtil"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-    <title>Danh sách phiên đo - VendDB</title>
+    <title>Vend Sessions - VendDB</title>
     <link rel="stylesheet" href="<%=request.getContextPath()%>/css/style.css">
 </head>
 <body>
@@ -18,13 +18,13 @@
         <div class="card">
             <div class="card-header">
                 <div>
-                    <h2 class="card-title"> Danh sách Phiên đo Lượt nhả hàng (Vend Sessions)</h2>
+                    <h2 class="card-title"> Vend Sessions List</h2>
                     <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.25rem;">
-                        Tổng số phiên: <strong><%=request.getAttribute("totalSessions")%></strong> lượt chạy thực nghiệm
+                        Total: <strong><%=request.getAttribute("totalSessions")%></strong> test runs
                     </p>
                 </div>
                 <a href="<%=request.getContextPath()%>/export" class="btn btn-outline">
-                     Xuất dữ liệu CSV
+                     Export CSV
                 </a>
             </div>
 
@@ -36,25 +36,25 @@
                     List<VendSlot> slots = (List<VendSlot>) request.getAttribute("slots");
                 %>
                 <select name="label" style="min-width:180px; flex:1;">
-                    <option value="">-- Tất cả phân loại --</option>
-                    <option value="SUCCESS" <%="SUCCESS".equals(currentLabel) ? "selected" : ""%>>SUCCESS (Thành công)</option>
-                    <option value="JAM" <%="JAM".equals(currentLabel) ? "selected" : ""%>>JAM (Kẹt rãnh)</option>
-                    <option value="WRONG_ITEM" <%="WRONG_ITEM".equals(currentLabel) ? "selected" : ""%>>WRONG_ITEM (Rơi 2 món/Sai)</option>
-                    <option value="MOTOR_FAIL" <%="MOTOR_FAIL".equals(currentLabel) ? "selected" : ""%>>MOTOR_FAIL (Lỗi động cơ)</option>
+                    <option value="">-- All Classifications --</option>
+                    <option value="SUCCESS" <%="SUCCESS".equals(currentLabel) ? "selected" : ""%>>SUCCESS (Success)</option>
+                    <option value="JAM" <%="JAM".equals(currentLabel) ? "selected" : ""%>>JAM (Item Jam)</option>
+                    <option value="WRONG_ITEM" <%="WRONG_ITEM".equals(currentLabel) ? "selected" : ""%>>WRONG_ITEM (Double/Wrong Item)</option>
+                    <option value="MOTOR_FAIL" <%="MOTOR_FAIL".equals(currentLabel) ? "selected" : ""%>>MOTOR_FAIL (Motor Failure)</option>
                 </select>
 
                 <select name="slotId" style="min-width:180px; flex:1;">
-                    <option value="">-- Tất cả các rãnh --</option>
+                    <option value="">-- All Slots --</option>
                     <% if (slots != null) {
                         for (VendSlot s : slots) {
                     %>
-                        <option value="<%=s.getSlotId()%>" <%=(currentSlotId != null && currentSlotId == s.getSlotId()) ? "selected" : ""%>><%=s.getCode()%> (<%=s.getProductName() != null ? s.getProductName() : "Trống"%>)</option>
+                        <option value="<%=s.getSlotId()%>" <%=(currentSlotId != null && currentSlotId == s.getSlotId()) ? "selected" : ""%>><%=s.getCode()%> (<%=s.getProductName() != null ? s.getProductName() : "Empty"%>)</option>
                     <% } } %>
                 </select>
 
                 <div style="display:flex; gap:0.5rem;">
-                    <button type="submit" class="btn btn-primary"> Lọc phiên</button>
-                    <a href="<%=request.getContextPath()%>/sessions" class="btn btn-outline">Xóa lọc</a>
+                    <button type="submit" class="btn btn-primary"> Filter</button>
+                    <a href="<%=request.getContextPath()%>/sessions" class="btn btn-outline">Clear</a>
                 </div>
             </form>
 
@@ -64,14 +64,14 @@
                     <thead>
                         <tr>
                             <th>Seq #</th>
-                            <th>Rãnh / Mặt hàng</th>
-                            <th>Động cơ quay?</th>
-                            <th>Thời gian quay</th>
-                            <th>Khối lượng ($W_{trước} \rightarrow W_{sau}$)</th>
-                            <th>Độ tăng ($\Delta W$)</th>
-                            <th>Nhãn phân loại</th>
-                            <th>Nguồn nhãn</th>
-                            <th style="text-align:center;">Chi tiết</th>
+                            <th>Slot / Product</th>
+                            <th>Motor Status</th>
+                            <th>Motor Duration</th>
+                            <th>Weight </th>
+                            <th>Delta Weight </th>
+                            <th>Classification Label</th>
+                            <th>Label Source</th>
+                            <th style="text-align:center;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -89,9 +89,9 @@
                             </td>
                             <td>
                                 <% if (s.getCoilTurns() >= 1) { %>
-                                    <span class="badge badge-success">1 Vòng</span>
+                                    <span class="badge badge-success">1 Turn</span>
                                 <% } else { %>
-                                    <span class="badge badge-danger">Chưa đủ vòng</span>
+                                    <span class="badge badge-danger">Incomplete</span>
                                 <% } %>
                             </td>
                             <td><%=s.getMotorMs()%> ms</td>
@@ -119,7 +119,7 @@
                             </td>
                             <td style="text-align:center;">
                                 <a href="<%=request.getContextPath()%>/session/detail?id=<%=s.getSessionId()%>" class="btn btn-outline btn-sm">
-                                     Xem & Sửa
+                                     View & Edit
                                 </a>
                             </td>
                         </tr>
@@ -128,7 +128,7 @@
                             } else {
                         %>
                         <tr>
-                            <td colspan="9" style="text-align:center; color:var(--text-muted);">Không tìm thấy phiên đo nào.</td>
+                            <td colspan="9" style="text-align:center; color:var(--text-muted);">No sessions found.</td>
                         </tr>
                         <% } %>
                     </tbody>
@@ -150,14 +150,14 @@
             %>
             <div class="pagination-wrapper">
                 <div class="pagination-info">
-                    Đang xem trang <strong><%=currentPage%></strong> / <strong><%=totalPages%></strong>
+                    Viewing page <strong><%=currentPage%></strong> of <strong><%=totalPages%></strong>
                 </div>
 
                 <div class="pagination">
                     <% if (currentPage > 1) { %>
-                        <a href="<%=request.getContextPath()%>/sessions?page=<%=currentPage - 1%><%=filterQuery%>" class="page-btn" title="Trang trước">&laquo;</a>
+                        <a href="<%=request.getContextPath()%>/sessions?page=<%=currentPage - 1%><%=filterQuery%>" class="page-btn" title="Previous page">&laquo;</a>
                     <% } else { %>
-                        <span class="page-btn disabled" title="Đang ở trang đầu">&laquo;</span>
+                        <span class="page-btn disabled" title="First page">&laquo;</span>
                     <% } %>
 
                     <div class="pagination-numbers">
@@ -185,9 +185,9 @@
                     </div>
 
                     <% if (currentPage < totalPages) { %>
-                        <a href="<%=request.getContextPath()%>/sessions?page=<%=currentPage + 1%><%=filterQuery%>" class="page-btn" title="Trang sau">&raquo;</a>
+                        <a href="<%=request.getContextPath()%>/sessions?page=<%=currentPage + 1%><%=filterQuery%>" class="page-btn" title="Next page">&raquo;</a>
                     <% } else { %>
-                        <span class="page-btn disabled" title="Đang ở trang cuối">&raquo;</span>
+                        <span class="page-btn disabled" title="Last page">&raquo;</span>
                     <% } %>
                 </div>
             </div>

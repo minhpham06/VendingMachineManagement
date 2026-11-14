@@ -12,21 +12,34 @@ import util.DBContext;
 public class VendRestockDAO {
 
     public List<VendRestock> getAllRestocks() {
+        return getAllRestocks(null);
+    }
+
+    public List<VendRestock> getAllRestocks(Integer deviceId) {
         List<VendRestock> list = new ArrayList<VendRestock>();
-        String sql = "SELECT r.restock_id, r.code, r.slot_id, s.code AS slot_code, r.product_id, " +
-                     "p.name AS product_name, r.quantity, r.restocked_by, u.full_name AS restocked_by_name, " +
-                     "r.note, r.is_active, r.created_at " +
-                     "FROM Vend_Restock r " +
-                     "JOIN Vend_Slot s ON r.slot_id = s.slot_id " +
-                     "LEFT JOIN Vend_Product p ON r.product_id = p.product_id " +
-                     "JOIN AppUser u ON r.restocked_by = u.user_id " +
-                     "ORDER BY r.restock_id DESC";
+        StringBuilder sql = new StringBuilder(
+            "SELECT r.restock_id, r.code, r.slot_id, s.code AS slot_code, r.product_id, " +
+            "p.name AS product_name, r.quantity, r.restocked_by, u.full_name AS restocked_by_name, " +
+            "r.note, r.is_active, r.created_at " +
+            "FROM Vend_Restock r " +
+            "JOIN Vend_Slot s ON r.slot_id = s.slot_id " +
+            "LEFT JOIN Vend_Product p ON r.product_id = p.product_id " +
+            "JOIN AppUser u ON r.restocked_by = u.user_id "
+        );
+        if (deviceId != null && deviceId > 0) {
+            sql.append("WHERE s.device_id = ? ");
+        }
+        sql.append("ORDER BY r.restock_id DESC");
+
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
             conn = DBContext.getConnection();
-            ps = conn.prepareStatement(sql);
+            ps = conn.prepareStatement(sql.toString());
+            if (deviceId != null && deviceId > 0) {
+                ps.setInt(1, deviceId);
+            }
             rs = ps.executeQuery();
             while (rs.next()) {
                 list.add(mapRestock(rs));

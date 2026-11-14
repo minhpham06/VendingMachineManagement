@@ -77,7 +77,7 @@ public class ProductServlet extends HttpServlet {
         boolean active = "1".equals(req.getParameter("isActive"));
 
         if (name == null || name.trim().isEmpty() || weight <= 0) {
-            req.setAttribute("errorMessage", "Tên mặt hàng và Khối lượng danh định (>0) là bắt buộc.");
+            req.setAttribute("errorMessage", "Product name and Nominal Weight (>0) are required.");
             req.getRequestDispatcher("/WEB-INF/views/product_form.jsp").forward(req, resp);
             return;
         }
@@ -99,7 +99,7 @@ public class ProductServlet extends HttpServlet {
         if (id > 0) {
             resp.sendRedirect(req.getContextPath() + "/master/products?success=created");
         } else {
-            req.setAttribute("errorMessage", "Lỗi thêm sản phẩm.");
+            req.setAttribute("errorMessage", "Failed to add product.");
             req.getRequestDispatcher("/WEB-INF/views/product_form.jsp").forward(req, resp);
         }
     }
@@ -135,7 +135,7 @@ public class ProductServlet extends HttpServlet {
         boolean active = "1".equals(req.getParameter("isActive"));
 
         if (name == null || name.trim().isEmpty() || weight <= 0) {
-            req.setAttribute("errorMessage", "Tên mặt hàng và Khối lượng danh định (>0) là bắt buộc.");
+            req.setAttribute("errorMessage", "Product name and Nominal Weight (>0) are required.");
             req.setAttribute("product", p);
             req.getRequestDispatcher("/WEB-INF/views/product_form.jsp").forward(req, resp);
             return;
@@ -154,7 +154,7 @@ public class ProductServlet extends HttpServlet {
         if (productDAO.update(p)) {
             resp.sendRedirect(req.getContextPath() + "/master/products?success=updated");
         } else {
-            req.setAttribute("errorMessage", "Lỗi cập nhật sản phẩm.");
+            req.setAttribute("errorMessage", "Failed to update product.");
             req.setAttribute("product", p);
             req.getRequestDispatcher("/WEB-INF/views/product_form.jsp").forward(req, resp);
         }

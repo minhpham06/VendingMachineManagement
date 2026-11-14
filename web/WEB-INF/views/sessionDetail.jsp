@@ -11,11 +11,11 @@
     boolean canReview = (me != null && ("ADMIN".equals(me.getRoleCode()) || "REVIEWER".equals(me.getRoleCode())));
 %>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-    <title>Chi tiết phiên đo #<%=s.getDeviceSeq()%> - VendDB</title>
+    <title>Session Details #<%=s.getDeviceSeq()%> - VendDB</title>
     <link rel="stylesheet" href="<%=request.getContextPath()%>/css/style.css">
     <style>
         .detail-grid {
@@ -68,64 +68,65 @@
         <!-- HEADER -->
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
             <div>
-                <h1 style="font-size:1.4rem;"> Chi tiết Phiên Thực Nghiệm: Seq #<%=s.getDeviceSeq()%></h1>
-                <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:0.25rem;">Mã phiên hệ thống: #<%=s.getSessionId()%> | Thời gian: <%=WebUtil.formatDateTime(s.getMeasuredAt())%></p>
+                <h1 style="font-size:1.4rem;"> Experimental Session Details: Seq #<%=s.getDeviceSeq()%></h1>
+                <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:0.25rem;">System Session ID: #<%=s.getSessionId()%> | Timestamp: <%=WebUtil.formatDateTime(s.getMeasuredAt())%></p>
             </div>
-            <a href="<%=request.getContextPath()%>/sessions" class="btn btn-outline btn-sm">⬅ Danh sách phiên</a>
+            <a href="<%=request.getContextPath()%>/sessions" class="btn btn-outline btn-sm">Back to Sessions</a>
         </div>
 
         <% if ("corrected".equals(request.getParameter("success"))) { %>
-            <div class="alert alert-success"><span> Đã cập nhật và lưu vết lịch sử hiệu chỉnh nhãn thành công!</span></div>
+            <div class="alert alert-success"><span> Label updated and audit trail saved successfully!</span></div>
         <% } %>
         <% if (request.getAttribute("errorMessage") != null) { %>
             <div class="alert alert-danger"><span> <%=request.getAttribute("errorMessage")%></span></div>
         <% } %>
 
         <div class="detail-grid">
+                
             <!-- COT 1: THONG SO VAT LY -->
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title"> Thông số Đo đạc Thực nghiệm</h3>
-                    <span class="badge badge-info"><%=s.isSample() ? "Dữ liệu mẫu" : "Thực nghiệm ESP32"%></span>
+                    <h3 class="card-title"> Experimental Measurement Metrics</h3>
+                    <span class="badge badge-info"><%=s.isSample() ? "Sample Data" : "ESP32 Experiment"%></span>
                 </div>
 
                 <div class="spec-list">
                     <div class="spec-row">
-                        <span class="spec-label">Rãnh máy / Mặt hàng:</span>
+                        <span class="spec-label">Slot / Product:</span>
                         <strong><%=s.getSlotCode()%> - <%=WebUtil.esc(s.getProductName())%></strong>
                     </div>
                     <div class="spec-row">
-                        <span class="spec-label">Khối lượng danh định chuẩn:</span>
+                        <span class="spec-label">Standard Nominal Weight:</span>
                         <span><%=WebUtil.formatWeight(s.getNominalWeight())%> (&plusmn;<%=WebUtil.formatWeight(s.getTolerance())%>)</span>
                     </div>
                     <div class="spec-row">
-                        <span class="spec-label">Cảm biến trục động cơ (Reed Switch):</span>
+                        <span class="spec-label">Motor Shaft Sensor (Reed Switch):</span>
                         <span>
                             <% if (s.getCoilTurns() >= 1) { %>
-                                <span class="badge badge-success">Quay đủ 1 vòng</span>
+                                <span class="badge badge-success">Complete 1 Turn</span>
                             <% } else { %>
-                                <span class="badge badge-danger">Kẹt motor (Chưa đủ vòng)</span>
+                                <span class="badge badge-danger">Motor Stalled (Incomplete)</span>
                             <% } %>
                         </span>
                     </div>
                     <div class="spec-row">
-                        <span class="spec-label">Thời gian quay thực tế:</span>
+                        <span class="spec-label">Actual Rotation Duration:</span>
                         <strong><%=s.getMotorMs()%> ms</strong>
                     </div>
                     <div class="spec-row">
-                        <span class="spec-label">Khối lượng trước khi nhả ($W_{trước}$):</span>
+                        <span class="spec-label">Weight Before Dispense:</span>
                         <span><%=WebUtil.formatWeight(s.getWeightBefore())%></span>
                     </div>
                     <div class="spec-row">
-                        <span class="spec-label">Độ lệch đỉnh khi rơi ($\Delta W_{peak}$):</span>
+                        <span class="spec-label">Impact Peak Delta:</span>
                         <span style="color:#f59e0b; font-weight:600;"><%=WebUtil.formatWeight(s.getPeakDelta())%></span>
                     </div>
                     <div class="spec-row">
-                        <span class="spec-label">Khối lượng sau ổn định ($W_{sau}$):</span>
+                        <span class="spec-label">Weight After Stabilized:</span>
                         <span><%=WebUtil.formatWeight(s.getWeightAfter())%></span>
                     </div>
                     <div class="spec-row">
-                        <span class="spec-label">Độ tăng khối lượng khay ($\Delta W$):</span>
+                        <span class="spec-label">Net Weight Delta:</span>
                         <strong style="font-size:1.05rem; color:#2563eb;">+<%=WebUtil.formatWeight(s.getWeightDelta())%></strong>
                     </div>
                 </div>
@@ -134,13 +135,13 @@
             <!-- COT 2: BIEU DO DANG SONG CANVAS -->
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title"> Đồ thị Biến thiên Khối lượng (Weight Profile)</h3>
+                    <h3 class="card-title"> Dynamic Weight Profile Graph</h3>
                 </div>
                 <div class="canvas-container">
                     <canvas id="weightWaveCanvas" width="460" height="230" style="max-width:100%; height:auto; display:block;"></canvas>
                 </div>
                 <p style="font-size:0.78rem; color:var(--text-muted); text-align:center; margin-top:0.5rem;">
-                    Mô phỏng 3 pha: Ban đầu ($W_{trước}$) &rarr; Đỉnh xung lực ($W_{đỉnh}$) &rarr; Ổn định ($W_{sau}$)
+                    3-Phase Model: Initial ($W_{before}$) &rarr; Impact Peak ($W_{peak}$) &rarr; Stabilized ($W_{after}$)
                 </p>
             </div>
         </div>
@@ -150,17 +151,17 @@
             <!-- LICH SU NHAN -->
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title"> Lịch sử Gán nhãn (Audit Trail)</h3>
+                    <h3 class="card-title"> Label Audit Trail</h3>
                 </div>
                 <div class="table-responsive">
                     <table>
                         <thead>
                             <tr>
-                                <th>Nhãn</th>
-                                <th>Nguồn gán</th>
-                                <th>Người duyệt</th>
-                                <th>Lý do hiệu chỉnh</th>
-                                <th>Thời gian</th>
+                                <th>Label</th>
+                                <th>Source</th>
+                                <th>Reviewer</th>
+                                <th>Correction Reason</th>
+                                <th>Timestamp</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -178,7 +179,7 @@
                                     <% if ("REVIEWER".equals(l.getSource())) { %>
                                         <span class="badge badge-warning">Reviewer</span>
                                     <% } else { %>
-                                        <span style="color:var(--text-muted);">Hệ thống (Auto)</span>
+                                        <span style="color:var(--text-muted);">System (Auto)</span>
                                     <% } %>
                                 </td>
                                 <td><%=l.getReviewerName() != null ? WebUtil.esc(l.getReviewerName()) : "-"%></td>
@@ -197,7 +198,7 @@
             <!-- FORM REVIEWER SUA NHAN -->
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title"> Hiệu chỉnh Nhãn (Dành cho Reviewer)</h3>
+                    <h3 class="card-title"> Label Correction (For Reviewers)</h3>
                 </div>
 
                 <% if (canReview) { %>
@@ -205,27 +206,27 @@
                         <input type="hidden" name="sessionId" value="<%=s.getSessionId()%>">
 
                         <div class="form-group">
-                            <label for="newLabel">Chọn Nhãn chính xác (*)</label>
+                            <label for="newLabel">Select Correct Label (*)</label>
                             <select id="newLabel" name="newLabel" required>
-                                <option value="SUCCESS" <%="SUCCESS".equals(s.getCurrentLabel()) ? "selected" : ""%>>SUCCESS (Nhả hàng thành công)</option>
-                                <option value="JAM" <%="JAM".equals(s.getCurrentLabel()) ? "selected" : ""%>>JAM (Kẹt hàng trong rãnh)</option>
-                                <option value="WRONG_ITEM" <%="WRONG_ITEM".equals(s.getCurrentLabel()) ? "selected" : ""%>>WRONG_ITEM (Rơi 2 món / Sai mặt hàng)</option>
-                                <option value="MOTOR_FAIL" <%="MOTOR_FAIL".equals(s.getCurrentLabel()) ? "selected" : ""%>>MOTOR_FAIL (Lỗi trục động cơ)</option>
+                                <option value="SUCCESS" <%="SUCCESS".equals(s.getCurrentLabel()) ? "selected" : ""%>>SUCCESS (Item Dispensed Successfully)</option>
+                                <option value="JAM" <%="JAM".equals(s.getCurrentLabel()) ? "selected" : ""%>>JAM (Item Jammed in Coil)</option>
+                                <option value="WRONG_ITEM" <%="WRONG_ITEM".equals(s.getCurrentLabel()) ? "selected" : ""%>>WRONG_ITEM (Double Drop / Wrong Item)</option>
+                                <option value="MOTOR_FAIL" <%="MOTOR_FAIL".equals(s.getCurrentLabel()) ? "selected" : ""%>>MOTOR_FAIL (Motor Axis Failure)</option>
                             </select>
                         </div>
 
                         <div class="form-group">
-                            <label for="reason">Lý do hiệu chỉnh (* tối thiểu 5 ký tự)</label>
-                            <textarea id="reason" name="reason" rows="3" placeholder="Nhập lý do hiệu chỉnh nhãn (vd: Đối chiếu video thấy rơi 2 gói kẹo)..." required minlength="5"></textarea>
+                            <label for="reason">Correction Reason (* min 5 characters)</label>
+                            <textarea id="reason" name="reason" rows="3" placeholder="Enter correction reason (e.g., Video confirmed double drop)..." required minlength="5"></textarea>
                         </div>
 
                         <button type="submit" class="btn btn-warning" style="width:100%;">
-                             Xác nhận sửa nhãn (Lưu vào Audit Log)
+                             Confirm Label Correction (Save to Audit Trail)
                         </button>
                     </form>
                 <% } else { %>
                     <div class="alert alert-warning">
-                        <span>ℹ Chỉ người dùng có vai trò <strong>REVIEWER</strong> hoặc <strong>ADMIN</strong> mới có quyền hiệu chỉnh nhãn cho phiên này.</span>
+                        <span>Only users with <strong>REVIEWER</strong> or <strong>ADMIN</strong> role are authorized to correct labels for this session.</span>
                     </div>
                 <% } %>
             </div>
@@ -301,9 +302,9 @@
             ctx.fill();
 
             const points = [
-                { pt: p2, label: 'Trước: ' + wBefore.toFixed(1) + 'g', color: '#94a3b8' },
-                { pt: p3, label: 'Đỉnh: ' + wPeak.toFixed(1) + 'g', color: '#f59e0b' },
-                { pt: p6, label: 'Sau: ' + wAfter.toFixed(1) + 'g', color: '#10b981' }
+                { pt: p2, label: 'Before: ' + wBefore.toFixed(1) + 'g', color: '#94a3b8' },
+                { pt: p3, label: 'Peak: ' + wPeak.toFixed(1) + 'g', color: '#f59e0b' },
+                { pt: p6, label: 'After: ' + wAfter.toFixed(1) + 'g', color: '#10b981' }
             ];
 
             points.forEach(item => {
@@ -315,7 +316,7 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
 
-                ctx.fillStyle = '#f8fafc';
+                ctx.fillStyle = '#1e293b';
                 ctx.font = 'bold 11px Segoe UI';
                 ctx.fillText(item.label, item.pt.x - 20, item.pt.y - 12);
             });

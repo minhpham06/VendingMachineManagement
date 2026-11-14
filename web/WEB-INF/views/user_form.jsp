@@ -1,4 +1,4 @@
-﻿<%@page import="java.util.List"%>
+<%@page import="java.util.List"%>
 <%@page import="model.AppUser"%>
 <%@page import="model.AppRole"%>
 <%@page import="util.WebUtil"%>
@@ -9,11 +9,11 @@
     List<AppRole> roles = (List<AppRole>) request.getAttribute("roles");
 %>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-    <title><%=(isEdit ? "Chỉnh sửa người dùng" : "Thêm người dùng mới")%> - VendDB</title>
+    <title><%=(isEdit ? "Edit User" : "Add New User")%> - VendDB</title>
     <link rel="stylesheet" href="<%=request.getContextPath()%>/css/style.css">
 </head>
 <body>
@@ -22,8 +22,8 @@
     <div class="container" style="max-width: 600px;">
         <div class="card">
             <div class="card-header">
-                <h2 class="card-title"><%=(isEdit ? " Chỉnh sửa thông tin tài khoản" : " Thêm tài khoản người dùng mới")%></h2>
-                <a href="<%=request.getContextPath()%>/admin/users" class="btn btn-outline btn-sm">⬅ Quay lại</a>
+                <h2 class="card-title"><%=(isEdit ? " Edit User Account" : " Add New User Account")%></h2>
+                <a href="<%=request.getContextPath()%>/admin/users" class="btn btn-outline btn-sm">Back</a>
             </div>
 
             <% if (request.getAttribute("errorMessage") != null) { %>
@@ -35,40 +35,40 @@
             <form action="<%=request.getContextPath()%><%=isEdit ? "/admin/user/edit?id=" + editUser.getUserId() : "/admin/user/create"%>" method="POST">
                 <% if (!isEdit) { %>
                     <div class="form-group">
-                        <label for="username">Tên đăng nhập (*)</label>
-                        <input type="text" id="username" name="username" placeholder="vd: reviewer_01" required>
+                        <label for="username">Username (*)</label>
+                        <input type="text" id="username" name="username" placeholder="e.g. reviewer_01" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="password">Mật khẩu khởi tạo (*)</label>
-                        <input type="password" id="password" name="password" placeholder="Mật khẩu tối thiểu 6 ký tự..." required>
+                        <label for="password">Initial Password (*)</label>
+                        <input type="password" id="password" name="password" placeholder="Min 6 characters..." required>
                     </div>
                 <% } else { %>
                     <div class="form-group">
-                        <label>Tên đăng nhập</label>
+                        <label>Username</label>
                         <input type="text" value="<%=WebUtil.esc(editUser.getUsername())%>" disabled style="opacity:0.7; cursor:not-allowed;">
                     </div>
                 <% } %>
 
                 <div class="form-group">
-                    <label for="fullName">Họ và tên (*)</label>
-                    <input type="text" id="fullName" name="fullName" value="<%=isEdit ? WebUtil.esc(editUser.getFullName()) : ""%>" placeholder="vd: Nguyễn Văn A" required>
+                    <label for="fullName">Full Name (*)</label>
+                    <input type="text" id="fullName" name="fullName" value="<%=isEdit ? WebUtil.esc(editUser.getFullName()) : ""%>" placeholder="e.g. John Doe" required>
                 </div>
 
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" id="email" name="email" value="<%=isEdit && editUser.getEmail() != null ? WebUtil.esc(editUser.getEmail()) : ""%>" placeholder="vd: user@fpt.edu.vn">
+                    <input type="email" id="email" name="email" value="<%=isEdit && editUser.getEmail() != null ? WebUtil.esc(editUser.getEmail()) : ""%>" placeholder="e.g. user@example.com">
                 </div>
 
                 <div class="form-group">
-                    <label for="phone">Số điện thoại</label>
-                    <input type="text" id="phone" name="phone" value="<%=isEdit && editUser.getPhone() != null ? WebUtil.esc(editUser.getPhone()) : ""%>" placeholder="vd: 0912345678">
+                    <label for="phone">Phone</label>
+                    <input type="text" id="phone" name="phone" value="<%=isEdit && editUser.getPhone() != null ? WebUtil.esc(editUser.getPhone()) : ""%>" placeholder="e.g. 0912345678">
                 </div>
 
                 <div class="form-group">
-                    <label for="roleId">Vai trò phân quyền (*)</label>
+                    <label for="roleId">User Role (*)</label>
                     <select id="roleId" name="roleId" required>
-                        <option value="">-- Chọn vai trò --</option>
+                        <option value="">-- Select Role --</option>
                         <% if (roles != null) {
                             for (AppRole r : roles) {
                         %>
@@ -79,17 +79,17 @@
 
                 <% if (isEdit) { %>
                     <div class="form-group">
-                        <label>Trạng thái khóa tài khoản</label>
+                        <label>Account Lock Status</label>
                         <select name="isLocked">
-                            <option value="0" <%=!editUser.isLocked() ? "selected" : ""%>>Đang hoạt động</option>
-                            <option value="1" <%=editUser.isLocked() ? "selected" : ""%>>Đã bị khóa</option>
+                            <option value="0" <%=!editUser.isLocked() ? "selected" : ""%>>Active</option>
+                            <option value="1" <%=editUser.isLocked() ? "selected" : ""%>>Locked</option>
                         </select>
                     </div>
                 <% } %>
 
                 <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.5rem;">
-                    <a href="<%=request.getContextPath()%>/admin/users" class="btn btn-outline">Hủy bỏ</a>
-                    <button type="submit" class="btn btn-primary"><%=(isEdit ? " Lưu thay đổi" : " Tạo người dùng")%></button>
+                    <a href="<%=request.getContextPath()%>/admin/users" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary"><%=(isEdit ? " Save Changes" : " Create User")%></button>
                 </div>
             </form>
         </div>

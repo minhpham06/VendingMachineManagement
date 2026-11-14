@@ -13,6 +13,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import util.DBContext;
 
 @WebServlet("/dashboard")
@@ -22,6 +23,9 @@ public class DashboardServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+
+        HttpSession session = req.getSession(false);
+        Integer currentDeviceId = (session != null) ? (Integer) session.getAttribute("currentDeviceId") : null;
 
         int totalSessions = 0;
         int totalAlerts = 0;
@@ -43,14 +47,23 @@ public class DashboardServlet extends HttpServlet {
         try {
             conn = DBContext.getConnection();
 
-            // 1. Dem phien theo tung nhan
-            String sqlLabel = "SELECT l.label_code, COUNT(*) AS cnt " +
-                             "FROM Vend_Session s " +
-                             "JOIN Vend_Label l ON l.label_id = (" +
-                             "    SELECT TOP 1 l2.label_id FROM Vend_Label l2 WHERE l2.session_id = s.session_id ORDER BY l2.label_id DESC" +
-                             ") " +
-                             "GROUP BY l.label_code";
-            ps = conn.prepareStatement(sqlLabel);
+            // 1. Dem phien theo tung nhan (filter theo deviceId neu co)
+            StringBuilder sqlLabel = new StringBuilder(
+                "SELECT l.label_code, COUNT(*) AS cnt " +
+                "FROM Vend_Session s " +
+                "JOIN Vend_Label l ON l.label_id = (" +
+                "    SELECT TOP 1 l2.label_id FROM Vend_Label l2 WHERE l2.session_id = s.session_id ORDER BY l2.label_id DESC" +
+                ") "
+            );
+            if (currentDeviceId != null && currentDeviceId > 0) {
+                sqlLabel.append("WHERE s.device_id = ? ");
+            }
+            sqlLabel.append("GROUP BY l.label_code");
+
+            ps = conn.prepareStatement(sqlLabel.toString());
+            if (currentDeviceId != null && currentDeviceId > 0) {
+                ps.setInt(1, currentDeviceId);
+            }
             rs = ps.executeQuery();
             while (rs.next()) {
                 String code = rs.getString("label_code");
@@ -61,9 +74,20 @@ public class DashboardServlet extends HttpServlet {
             rs.close();
             ps.close();
 
-            // 2. Dem so canh bao chua xu ly (status = 'OPEN')
-            String sqlAlert = "SELECT COUNT(*) FROM Vend_Alert WHERE status = 'OPEN'";
-            ps = conn.prepareStatement(sqlAlert);
+            // 2. Dem so canh bao chua xu ly (status = 'OPEN' filter theo deviceId neu co)
+            StringBuilder sqlAlert = new StringBuilder(
+                "SELECT COUNT(*) FROM Vend_Alert a " +
+                "LEFT JOIN Vend_Slot sl ON a.slot_id = sl.slot_id " +
+                "WHERE a.status = 'OPEN' "
+            );
+            if (currentDeviceId != null && currentDeviceId > 0) {
+                sqlAlert.append("AND (sl.device_id = ? OR a.session_id IN (SELECT session_id FROM Vend_Session WHERE device_id = ?)) ");
+            }
+            ps = conn.prepareStatement(sqlAlert.toString());
+            if (currentDeviceId != null && currentDeviceId > 0) {
+                ps.setInt(1, currentDeviceId);
+                ps.setInt(2, currentDeviceId);
+            }
             rs = ps.executeQuery();
             if (rs.next()) {
                 totalAlerts = rs.getInt(1);
@@ -71,9 +95,19 @@ public class DashboardServlet extends HttpServlet {
             rs.close();
             ps.close();
 
-            // 3. Dem so mat hang va so ranh
-            String sqlCount = "SELECT (SELECT COUNT(*) FROM Vend_Product), (SELECT COUNT(*) FROM Vend_Slot)";
-            ps = conn.prepareStatement(sqlCount);
+            // 3. Dem so mat hang va so ranh (so ranh tinh theo may neu co)
+            StringBuilder sqlCount = new StringBuilder(
+                "SELECT (SELECT COUNT(*) FROM Vend_Product), "
+            );
+            if (currentDeviceId != null && currentDeviceId > 0) {
+                sqlCount.append("(SELECT COUNT(*) FROM Vend_Slot WHERE device_id = ?)");
+            } else {
+                sqlCount.append("(SELECT COUNT(*) FROM Vend_Slot)");
+            }
+            ps = conn.prepareStatement(sqlCount.toString());
+            if (currentDeviceId != null && currentDeviceId > 0) {
+                ps.setInt(1, currentDeviceId);
+            }
             rs = ps.executeQuery();
             if (rs.next()) {
                 totalProducts = rs.getInt(1);
@@ -83,7 +117,7 @@ public class DashboardServlet extends HttpServlet {
             ps.close();
 
             // 4. Thong ke ty le ket theo mat hang
-            String sqlProdStat =
+            StringBuilder sqlProdStat = new StringBuilder(
                 "SELECT p.name AS product_name, " +
                 "       COUNT(s.session_id) AS total_runs, " +
                 "       SUM(CASE WHEN l.label_code = 'JAM' THEN 1 ELSE 0 END) AS jam_count, " +
@@ -91,9 +125,17 @@ public class DashboardServlet extends HttpServlet {
                 "FROM Vend_Product p " +
                 "JOIN Vend_Slot sl ON sl.product_id = p.product_id " +
                 "LEFT JOIN Vend_Session s ON s.slot_id = sl.slot_id " +
-                "LEFT JOIN Vend_Label l ON l.label_id = (SELECT TOP 1 l2.label_id FROM Vend_Label l2 WHERE l2.session_id = s.session_id ORDER BY l2.label_id DESC) " +
-                "GROUP BY p.name";
-            ps = conn.prepareStatement(sqlProdStat);
+                "LEFT JOIN Vend_Label l ON l.label_id = (SELECT TOP 1 l2.label_id FROM Vend_Label l2 WHERE l2.session_id = s.session_id ORDER BY l2.label_id DESC) "
+            );
+            if (currentDeviceId != null && currentDeviceId > 0) {
+                sqlProdStat.append("WHERE sl.device_id = ? ");
+            }
+            sqlProdStat.append("GROUP BY p.name");
+
+            ps = conn.prepareStatement(sqlProdStat.toString());
+            if (currentDeviceId != null && currentDeviceId > 0) {
+                ps.setInt(1, currentDeviceId);
+            }
             rs = ps.executeQuery();
             while (rs.next()) {
                 Map<String, Object> map = new HashMap<String, Object>();
@@ -111,8 +153,16 @@ public class DashboardServlet extends HttpServlet {
             ps.close();
 
             // 5. Lay mau 100 do lech can nang (weight_delta) cho bieu do phan bo
-            String sqlDelta = "SELECT TOP 100 weight_delta FROM Vend_Session ORDER BY session_id DESC";
-            ps = conn.prepareStatement(sqlDelta);
+            StringBuilder sqlDelta = new StringBuilder("SELECT TOP 100 weight_delta FROM Vend_Session ");
+            if (currentDeviceId != null && currentDeviceId > 0) {
+                sqlDelta.append("WHERE device_id = ? ");
+            }
+            sqlDelta.append("ORDER BY session_id DESC");
+
+            ps = conn.prepareStatement(sqlDelta.toString());
+            if (currentDeviceId != null && currentDeviceId > 0) {
+                ps.setInt(1, currentDeviceId);
+            }
             rs = ps.executeQuery();
             while (rs.next()) {
                 deltaWeights.add(rs.getDouble("weight_delta"));

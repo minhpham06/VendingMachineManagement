@@ -19,7 +19,35 @@ public class VendAlert implements Serializable {
     private String handledNote;
     private Timestamp createdAt;
 
+    private boolean slotSuspended;
+    private String deviceCode;
+    private String machineName;
+
     public VendAlert() {
+    }
+
+    public boolean isSlotSuspended() {
+        return slotSuspended;
+    }
+
+    public void setSlotSuspended(boolean slotSuspended) {
+        this.slotSuspended = slotSuspended;
+    }
+
+    public String getDeviceCode() {
+        return deviceCode;
+    }
+
+    public void setDeviceCode(String deviceCode) {
+        this.deviceCode = deviceCode;
+    }
+
+    public String getMachineName() {
+        return machineName;
+    }
+
+    public void setMachineName(String machineName) {
+        this.machineName = machineName;
     }
 
     public int getAlertId() {

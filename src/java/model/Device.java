@@ -11,6 +11,9 @@ public class Device implements Serializable {
     private String apiKey;
     private String macAddress;
     private String status;
+    private String machineName;
+    private String locationName;
+    private boolean hardwareDemo;
     private Timestamp createdAt;
 
     public Device() {
@@ -54,6 +57,30 @@ public class Device implements Serializable {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getMachineName() {
+        return machineName;
+    }
+
+    public void setMachineName(String machineName) {
+        this.machineName = machineName;
+    }
+
+    public String getLocationName() {
+        return locationName;
+    }
+
+    public void setLocationName(String locationName) {
+        this.locationName = locationName;
+    }
+
+    public boolean isHardwareDemo() {
+        return hardwareDemo;
+    }
+
+    public void setHardwareDemo(boolean hardwareDemo) {
+        this.hardwareDemo = hardwareDemo;
     }
 
     public Timestamp getCreatedAt() {

@@ -29,6 +29,10 @@ public class VendSessionDAO {
         "LEFT JOIN AppUser u ON l.labeled_by = u.user_id ";
 
     public List<VendSession> search(String label, Integer slotId, int offset, int limit) {
+        return search(label, slotId, null, offset, limit);
+    }
+
+    public List<VendSession> search(String label, Integer slotId, Integer deviceId, int offset, int limit) {
         List<VendSession> list = new ArrayList<VendSession>();
         StringBuilder sql = new StringBuilder(SELECT_BASE).append("WHERE 1=1 ");
         List<Object> params = new ArrayList<Object>();
@@ -40,6 +44,10 @@ public class VendSessionDAO {
         if (slotId != null && slotId > 0) {
             sql.append("AND s.slot_id = ? ");
             params.add(slotId);
+        }
+        if (deviceId != null && deviceId > 0) {
+            sql.append("AND s.device_id = ? ");
+            params.add(deviceId);
         }
 
         sql.append("ORDER BY s.session_id DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
@@ -68,6 +76,10 @@ public class VendSessionDAO {
     }
 
     public int count(String label, Integer slotId) {
+        return count(label, slotId, null);
+    }
+
+    public int count(String label, Integer slotId, Integer deviceId) {
         StringBuilder sql = new StringBuilder(
             "SELECT COUNT(*) FROM Vend_Session s " +
             "LEFT JOIN Vend_Label l ON l.label_id = (" +
@@ -83,6 +95,10 @@ public class VendSessionDAO {
         if (slotId != null && slotId > 0) {
             sql.append("AND s.slot_id = ? ");
             params.add(slotId);
+        }
+        if (deviceId != null && deviceId > 0) {
+            sql.append("AND s.device_id = ? ");
+            params.add(deviceId);
         }
 
         Connection conn = null;
@@ -129,8 +145,8 @@ public class VendSessionDAO {
 
     public int insertSession(VendSession s) {
         String sql = "INSERT INTO Vend_Session (device_id, slot_id, device_seq, weight_before, weight_after, " +
-                     "weight_delta, coil_turns, motor_ms, settle_ms, peak_delta, is_sample) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                     "weight_delta, coil_turns, motor_ms, settle_ms, peak_delta, is_sample, measured_at, ingested_at) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, SYSDATETIME(), SYSDATETIME())";
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -150,6 +166,27 @@ public class VendSessionDAO {
             ps.setBoolean(11, s.isSample());
             ps.executeUpdate();
             rs = ps.getGeneratedKeys();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            DBContext.close(rs, ps, conn);
+        }
+        return 0;
+    }
+
+    public int getMaxSeq(int deviceId) {
+        String sql = "SELECT ISNULL(MAX(device_seq), 0) FROM Vend_Session WHERE device_id = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = DBContext.getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, deviceId);
+            rs = ps.executeQuery();
             if (rs.next()) {
                 return rs.getInt(1);
             }

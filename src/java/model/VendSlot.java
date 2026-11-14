@@ -7,6 +7,8 @@ public class VendSlot implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private int slotId;
+    private Integer deviceId;
+    private String machineName;
     private String code;
     private String name;
     private Integer productId;
@@ -126,6 +128,22 @@ public class VendSlot implements Serializable {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public Integer getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(Integer deviceId) {
+        this.deviceId = deviceId;
+    }
+
+    public String getMachineName() {
+        return machineName;
+    }
+
+    public void setMachineName(String machineName) {
+        this.machineName = machineName;
     }
 
     public Timestamp getCreatedAt() {

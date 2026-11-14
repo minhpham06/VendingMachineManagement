@@ -1,4 +1,4 @@
-﻿<%@page import="java.util.List"%>
+<%@page import="java.util.List"%>
 <%@page import="model.VendSlot"%>
 <%@page import="model.VendProduct"%>
 <%@page import="util.WebUtil"%>
@@ -8,11 +8,11 @@
     List<VendProduct> products = (List<VendProduct>) request.getAttribute("products");
 %>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-    <title>Cấu hình rãnh lò xo - VendDB</title>
+    <title>Configure Slot - VendDB</title>
     <link rel="stylesheet" href="<%=request.getContextPath()%>/css/style.css">
 </head>
 <body>
@@ -21,8 +21,8 @@
     <div class="container" style="max-width: 600px;">
         <div class="card">
             <div class="card-header">
-                <h2 class="card-title"> Cấu hình Rãnh lò xo: <%=slot.getCode()%></h2>
-                <a href="<%=request.getContextPath()%>/master/slots" class="btn btn-outline btn-sm">⬅ Quay lại</a>
+                <h2 class="card-title"> Configure Slot: <%=slot.getCode()%></h2>
+                <a href="<%=request.getContextPath()%>/master/slots" class="btn btn-outline btn-sm">Back</a>
             </div>
 
             <% if (request.getAttribute("errorMessage") != null) { %>
@@ -31,14 +31,14 @@
 
             <form action="<%=request.getContextPath()%>/master/slot/edit?id=<%=slot.getSlotId()%>" method="POST">
                 <div class="form-group">
-                    <label>Mã rãnh</label>
+                    <label>Slot Code</label>
                     <input type="text" value="<%=slot.getCode()%> - <%=WebUtil.esc(slot.getName())%>" disabled style="opacity:0.7; cursor:not-allowed;">
                 </div>
 
                 <div class="form-group">
-                    <label for="productId">Mặt hàng gán vào rãnh này (*)</label>
+                    <label for="productId">Assigned Product (*)</label>
                     <select id="productId" name="productId">
-                        <option value="">-- Chưa gán sản phẩm --</option>
+                        <option value="">-- Unassigned --</option>
                         <% if (products != null) {
                             for (VendProduct p : products) {
                         %>
@@ -50,26 +50,26 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="capacity">Sức chứa tối đa của rãnh (gói) (*)</label>
+                    <label for="capacity">Maximum Capacity (pcs) (*)</label>
                     <input type="number" id="capacity" name="capacity" value="<%=slot.getCapacity()%>" required min="1" max="50">
                 </div>
 
                 <div class="form-group">
-                    <label for="currentStock">Số lượng hàng tồn thực tế (*)</label>
+                    <label for="currentStock">Current Stock (*)</label>
                     <input type="number" id="currentStock" name="currentStock" value="<%=slot.getCurrentStock()%>" required min="0" max="50">
                 </div>
 
                 <div class="form-group">
-                    <label for="isSuspended">Trạng thái rãnh</label>
+                    <label for="isSuspended">Slot Status</label>
                     <select id="isSuspended" name="isSuspended">
-                        <option value="0" <%=!slot.isSuspended() ? "selected" : ""%>>Hoạt động bình thường (ACTIVE)</option>
-                        <option value="1" <%=slot.isSuspended() ? "selected" : ""%>>Tạm khóa rãnh (SUSPENDED)</option>
+                        <option value="0" <%=!slot.isSuspended() ? "selected" : ""%>>Normal Operation (ACTIVE)</option>
+                        <option value="1" <%=slot.isSuspended() ? "selected" : ""%>>Suspended (SUSPENDED)</option>
                     </select>
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.5rem;">
-                    <a href="<%=request.getContextPath()%>/master/slots" class="btn btn-outline">Hủy bỏ</a>
-                    <button type="submit" class="btn btn-primary"> Lưu cấu hình</button>
+                    <a href="<%=request.getContextPath()%>/master/slots" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary"> Save Configuration</button>
                 </div>
             </form>
         </div>

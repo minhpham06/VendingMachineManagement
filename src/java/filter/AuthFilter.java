@@ -82,7 +82,7 @@ public class AuthFilter implements Filter {
         // 1. Cho phép tài nguyên tĩnh và API không cần session Web
         if (path.startsWith("/css/") || path.startsWith("/js/") || path.startsWith("/images/")
             || path.endsWith(".css") || path.endsWith(".js") || path.endsWith(".png") || path.endsWith(".jpg")
-            || path.endsWith(".ico") || "/api/ingest".equals(path)) {
+            || path.endsWith(".ico") || path.startsWith("/api/")) {
             chain.doFilter(request, response);
             return;
         }

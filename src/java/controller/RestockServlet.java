@@ -52,14 +52,18 @@ public class RestockServlet extends HttpServlet {
 
     private void showList(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        List<VendRestock> restocks = restockDAO.getAllRestocks();
+        HttpSession session = req.getSession(false);
+        Integer currentDeviceId = (session != null) ? (Integer) session.getAttribute("currentDeviceId") : null;
+        List<VendRestock> restocks = restockDAO.getAllRestocks(currentDeviceId);
         req.setAttribute("restocks", restocks);
         req.getRequestDispatcher("/WEB-INF/views/restocks.jsp").forward(req, resp);
     }
 
     private void showCreateForm(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        List<VendSlot> slots = slotDAO.getAllSlots();
+        HttpSession session = req.getSession(false);
+        Integer currentDeviceId = (session != null) ? (Integer) session.getAttribute("currentDeviceId") : null;
+        List<VendSlot> slots = slotDAO.getSlotsByDevice(currentDeviceId);
         req.setAttribute("slots", slots);
         req.getRequestDispatcher("/WEB-INF/views/restock_form.jsp").forward(req, resp);
     }
@@ -80,7 +84,7 @@ public class RestockServlet extends HttpServlet {
 
         VendSlot slot = slotDAO.findById(slotId);
         if (slot == null || quantity <= 0) {
-            req.setAttribute("errorMessage", "Vui lòng chọn Rãnh và nhập Số lượng nạp hợp lệ (> 0).");
+            req.setAttribute("errorMessage", "Please select a Slot and enter a valid Restock Quantity (> 0).");
             req.setAttribute("slots", slotDAO.getAllSlots());
             req.setAttribute("selectedSlotId", slotId);
             req.setAttribute("selectedQuantity", quantity);
@@ -89,10 +93,10 @@ public class RestockServlet extends HttpServlet {
             return;
         }
 
-        // Kiểm tra rãnh có đang bị khóa / tạm dừng không
+        // Check if slot is suspended or inactive
         if (slot.isSuspended() || !slot.isActive()) {
-            req.setAttribute("errorMessage", "Không thể nạp hàng! Rãnh " + slot.getCode() + 
-                             " hiện đang bị KHÓA (Tạm dừng hoạt động). Vui lòng mở khóa rãnh trước khi thực hiện nạp hàng.");
+            req.setAttribute("errorMessage", "Cannot restock! Slot " + slot.getCode() + 
+                             " is currently LOCKED (Suspended). Please unlock the slot before restocking.");
             req.setAttribute("slots", slotDAO.getAllSlots());
             req.setAttribute("selectedSlotId", slotId);
             req.setAttribute("selectedQuantity", quantity);
@@ -101,12 +105,12 @@ public class RestockServlet extends HttpServlet {
             return;
         }
 
-        // Kiểm tra nạp vượt quá sức chứa tối đa của rãnh
+        // Check capacity limit
         int maxCanAdd = slot.getCapacity() - slot.getCurrentStock();
         if (slot.getCurrentStock() + quantity > slot.getCapacity()) {
-            req.setAttribute("errorMessage", "Không thể nạp " + quantity + " gói! Rãnh " + slot.getCode() + 
-                             " hiện có " + slot.getCurrentStock() + "/" + slot.getCapacity() + 
-                             " gói (chỉ có thể nạp thêm tối đa " + Math.max(0, maxCanAdd) + " gói).");
+            req.setAttribute("errorMessage", "Cannot restock " + quantity + " units! Slot " + slot.getCode() + 
+                             " currently has " + slot.getCurrentStock() + "/" + slot.getCapacity() + 
+                             " units (can only restock up to " + Math.max(0, maxCanAdd) + " more).");
             req.setAttribute("slots", slotDAO.getAllSlots());
             req.setAttribute("selectedSlotId", slotId);
             req.setAttribute("selectedQuantity", quantity);
@@ -118,7 +122,7 @@ public class RestockServlet extends HttpServlet {
         if (restockDAO.insertRestock(slotId, slot.getProductId(), quantity, me.getUserId(), note != null ? note.trim() : null)) {
             resp.sendRedirect(req.getContextPath() + "/master/restocks?success=created");
         } else {
-            req.setAttribute("errorMessage", "Lỗi tạo phiếu nạp hàng.");
+            req.setAttribute("errorMessage", "Failed to create restock record.");
             req.setAttribute("slots", slotDAO.getAllSlots());
             req.setAttribute("selectedSlotId", slotId);
             req.setAttribute("selectedQuantity", quantity);

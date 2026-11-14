@@ -12,11 +12,11 @@
     String currentNote = selectedNote != null ? selectedNote : "";
 %>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-    <title>Lập phiếu nạp hàng - VendDB</title>
+    <title>New Restock Entry - VendDB</title>
     <link rel="stylesheet" href="<%=request.getContextPath()%>/css/style.css">
 </head>
 <body>
@@ -25,8 +25,8 @@
     <div class="container" style="max-width: 600px;">
         <div class="card">
             <div class="card-header">
-                <h2 class="card-title"> Lập Phiếu Nạp Bổ Sung Hàng</h2>
-                <a href="<%=request.getContextPath()%>/master/restocks" class="btn btn-outline btn-sm">⬅ Quay lại</a>
+                <h2 class="card-title"> Create Restock Entry</h2>
+                <a href="<%=request.getContextPath()%>/master/restocks" class="btn btn-outline btn-sm">Back</a>
             </div>
 
             <% if (request.getAttribute("errorMessage") != null) { %>
@@ -37,36 +37,36 @@
 
             <form action="<%=request.getContextPath()%>/master/restock/create" method="POST">
                 <div class="form-group">
-                    <label for="slotId">Chọn Rãnh nạp hàng (*)</label>
+                    <label for="slotId">Select Restock Slot (*)</label>
                     <select id="slotId" name="slotId" required>
-                        <option value="">-- Chọn rãnh nhận hàng --</option>
+                        <option value="">-- Select Slot --</option>
                         <% if (slots != null) {
                             for (VendSlot s : slots) {
                                 boolean isSel = (selectedSlotId != null && selectedSlotId.intValue() == s.getSlotId());
                                 boolean isLocked = s.isSuspended() || !s.isActive();
                         %>
                             <option value="<%=s.getSlotId()%>" <%=isSel ? "selected" : ""%> <%=isLocked ? "style='color:#dc2626;'" : ""%>>
-                                <%=s.getCode()%> - <%=s.getProductName() != null ? s.getProductName() : "(Trống)"%> 
-                                (Hiện có: <%=s.getCurrentStock()%>/<%=s.getCapacity()%>)
-                                <%=isLocked ? "  [ĐANG BỊ KHÓA]" : ""%>
+                                <%=s.getCode()%> - <%=s.getProductName() != null ? s.getProductName() : "(Empty)"%> 
+                                (Current: <%=s.getCurrentStock()%>/<%=s.getCapacity()%>)
+                                <%=isLocked ? "  [LOCKED]" : ""%>
                             </option>
                         <% } } %>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label for="quantity">Số lượng nạp thêm (gói) (*)</label>
+                    <label for="quantity">Quantity to Restock (pcs) (*)</label>
                     <input type="number" id="quantity" name="quantity" value="<%=currentQty%>" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="note">Ghi chú phiếu nạp</label>
-                    <textarea id="note" name="note" rows="3" placeholder="vd: Bổ sung hàng đầu ca trực..."><%=WebUtil.esc(currentNote)%></textarea>
+                    <label for="note">Restock Notes</label>
+                    <textarea id="note" name="note" rows="3" placeholder="e.g. Shift restock..."><%=WebUtil.esc(currentNote)%></textarea>
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.5rem;">
-                    <a href="<%=request.getContextPath()%>/master/restocks" class="btn btn-outline">Hủy bỏ</a>
-                    <button type="submit" class="btn btn-primary"> Xác nhận nạp hàng</button>
+                    <a href="<%=request.getContextPath()%>/master/restocks" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary"> Confirm Restock</button>
                 </div>
             </form>
         </div>

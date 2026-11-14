@@ -7,6 +7,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import dao.VendProductDAO;
 import dao.VendSlotDAO;
 import model.VendProduct;
@@ -53,7 +54,9 @@ public class SlotServlet extends HttpServlet {
 
     private void showList(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        List<VendSlot> slots = slotDAO.getAllSlots();
+        HttpSession session = req.getSession(false);
+        Integer currentDeviceId = (session != null) ? (Integer) session.getAttribute("currentDeviceId") : null;
+        List<VendSlot> slots = slotDAO.getSlotsByDevice(currentDeviceId);
         req.setAttribute("slots", slots);
         req.getRequestDispatcher("/WEB-INF/views/slots.jsp").forward(req, resp);
     }
@@ -91,7 +94,7 @@ public class SlotServlet extends HttpServlet {
         if (slotDAO.update(slotId, productId, capacity, currentStock, isSuspended)) {
             resp.sendRedirect(req.getContextPath() + "/master/slots?success=updated");
         } else {
-            req.setAttribute("errorMessage", "Lỗi cập nhật cấu hình rãnh.");
+            req.setAttribute("errorMessage", "Error updating slot configuration.");
             req.setAttribute("slot", slot);
             req.setAttribute("products", productDAO.getAllProducts(true));
             req.getRequestDispatcher("/WEB-INF/views/slot_form.jsp").forward(req, resp);

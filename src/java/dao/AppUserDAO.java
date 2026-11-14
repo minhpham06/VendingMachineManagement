@@ -76,6 +76,10 @@ public class AppUserDAO {
         return null;
     }
 
+    public List<AppUser> getAllUsers() {
+        return search(null, null, null, 0, 1000);
+    }
+
     public List<AppUser> search(String q, Integer roleId, Boolean locked, int offset, int limit) {
         List<AppUser> list = new ArrayList<AppUser>();
         StringBuilder sql = new StringBuilder(SELECT_BASE).append("WHERE 1=1 ");

@@ -41,8 +41,18 @@ public class LabelReviewServlet extends HttpServlet {
             return;
         }
 
+        // KIỂM TRA PHÂN QUYỀN MÁY CHO REVIEWER
+        if ("REVIEWER".equals(me.getRoleCode())) {
+            dao.DeviceAssignmentDAO assignmentDAO = new dao.DeviceAssignmentDAO();
+            if (!assignmentDAO.isUserAssignedToDevice(me.getUserId(), s.getDeviceId())) {
+                req.setAttribute("errorMessage", "Bạn không có quyền kiểm duyệt nhãn của máy này.");
+                req.getRequestDispatcher("/WEB-INF/views/403.jsp").forward(req, resp);
+                return;
+            }
+        }
+
         if (newLabel == null || newLabel.trim().isEmpty() || reason == null || reason.trim().length() < 5) {
-            req.setAttribute("errorMessage", "Vui lòng chọn nhãn mới và nhập lý do sửa tối thiểu 5 ký tự.");
+            req.setAttribute("errorMessage", "Please select a new label and enter a reason of at least 5 characters.");
             req.setAttribute("sessionData", s);
             req.setAttribute("labelHistory", labelDAO.getLabelsBySessionId(sessionId));
             req.getRequestDispatcher("/WEB-INF/views/sessionDetail.jsp").forward(req, resp);
@@ -53,7 +63,7 @@ public class LabelReviewServlet extends HttpServlet {
         if (ok) {
             resp.sendRedirect(req.getContextPath() + "/session/detail?id=" + sessionId + "&success=corrected");
         } else {
-            req.setAttribute("errorMessage", "Lỗi cơ sở dữ liệu khi sửa nhãn.");
+            req.setAttribute("errorMessage", "Database error while updating label.");
             req.setAttribute("sessionData", s);
             req.setAttribute("labelHistory", labelDAO.getLabelsBySessionId(sessionId));
             req.getRequestDispatcher("/WEB-INF/views/sessionDetail.jsp").forward(req, resp);
